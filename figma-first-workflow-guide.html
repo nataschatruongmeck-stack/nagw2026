@@ -743,6 +743,13 @@ h2, h3 { font-weight: 600; }
 /* the masthead's own 4px stamp rule would stack with the chrome's 3px
    one; the masthead keeps it, the chrome drops to a hairline here */
 .nt-chrome { border-bottom-width: 1px; }
+
+/* Reflow fix (SC 1.4.10). Grid items default to min-width:auto, so they
+   refuse to shrink below their min-content width — one .step was rendering
+   494px wide inside a 452px track, pushing the whole page into horizontal
+   scroll at narrow widths. Measured: 518px scroll width in a 500px viewport
+   before, exactly 500px after. */
+.step-rail, .step-body { min-width: 0; }
 </style>
 </head>
 <body>
@@ -952,7 +959,7 @@ h2, h3 { font-weight: 600; }
         <div class="step-body">
           <h3>What to tell Claude Code before it starts</h3>
           <p>Keep this in a <code>CLAUDE.md</code> file at the root of the repo so you are not retyping it, and so it applies to everyone on the project.</p>
-          <pre class="snippet" tabindex="0"><span class="cmt">## Tokens</span>
+          <pre class="snippet" tabindex="0" role="region" aria-label="Example CLAUDE.md contents, scrollable"><span class="cmt">## Tokens</span>
 Use only CSS custom properties from build/css/variables.css.
 Reference semantic tokens (<span class="key">--color-action-*</span>), never
 primitives (<span class="key">--core-*</span>).
@@ -1069,8 +1076,8 @@ commands would return.</pre>
     <p>The residual risk is worth naming plainly. Every gate above filters a <em>known</em> failure class. A component that passes all of them and is still confusing to use remains entirely a human problem, and no amount of tooling changes that.</p>
 
     <p class="colophon">
-      Colophon — Single file. No build step. No webfonts, no CDN, no external requests of any kind: type is set in Charter / Cambria / Georgia with system sans and mono, which is also how you avoid a third-party font call in a government context.<br>
-      Built toward the floor it describes: semantic landmarks, real tables with row and column scope, visible focus, keyboard-scrollable overflow regions, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included. Self-assessed against WCAG 2.1 AA — not independently audited, and not yet verified with a screen reader.
+      Colophon — Single file. No build step. No CDN and no third-party requests of any kind: body type is set in Charter / Cambria / Georgia with system sans and mono, and the two display faces are served from this site, which is how you avoid a third-party font call in a government context.<br>
+      Built toward the floor it describes: semantic landmarks, real tables with row and column scope, visible focus, keyboard-scrollable overflow regions, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included. Self-assessed against WCAG 2.1 AA on 29 July 2026 by keyboard pass, reflow and 200% text-resize checks, and computed contrast on every colour pair in the stylesheet — not independently audited, and not yet verified with a screen reader. Full detail on the <a href="accessibility.html">accessibility page</a>.
     </p>
   </div>
 </footer>

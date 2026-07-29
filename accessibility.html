@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility — Natascha Truong</title>
+<meta name="description" content="Accessibility statement for nagw2026: standard, scope, assessment method, known issues, and how to report a problem.">
+<style>
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 400 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Caprasimo";
+  src: url("fonts/caprasimo-latin.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+:root {
+  --nt-nav-h: 56px;
+  --nt-ink:        #0E1826;
+  --nt-ink-soft:   #46536A;
+  --nt-paper:      #E8ECF1;
+  --nt-surface:    #FFFFFF;
+  --nt-rule:       #BFC9D6;
+  --nt-rule-strong: #8794A6;
+  --nt-stamp:      #134E8B;
+  --nt-stamp-wash: #E6EDF6;
+  --nt-hold:       #8C5A08;
+  --nt-hold-wash:  #F6EEDF;
+  --nt-on-ink:      #FFFFFF;
+  --nt-on-ink-soft: #B9C4D4;
+  --nt-on-ink-lift: #8FB4DF;
+  --nt-on-ink-rule: #2A3547;
+  --nt-vf: "SOFT" 100, "WONK" 1, "opsz" 20;
+  --nt-logo:    "Caprasimo", "Fraunces", Georgia, serif;
+  --nt-display: "Fraunces", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--nt-paper); color: var(--nt-ink);
+  font-family: var(--nt-sans); -webkit-font-smoothing: antialiased;
+}
+.shell { max-width: 44rem; margin: 0 auto; padding: 0 22px; }
+
+/* ---- chrome ---- */
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-stamp); color: #FFFFFF;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: -2px; }
+
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box; height: var(--nt-nav-h);
+  background: var(--nt-ink); border-bottom: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans); line-height: normal;
+}
+.nt-nav {
+  height: 100%; display: flex; align-items: center; gap: 28px;
+  padding: 0 22px; max-width: 1200px; margin: 0 auto;
+}
+.nt-mark {
+  font-family: var(--nt-logo); font-size: 21px; font-weight: 400;
+  letter-spacing: 0.005em; line-height: 1; color: var(--nt-on-ink);
+  text-decoration: none; white-space: nowrap; flex: none; padding: 2px 0;
+}
+.nt-mark:hover { color: var(--nt-on-ink-lift); }
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto; scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links a {
+  display: block; font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-on-ink-soft); text-decoration: none; white-space: nowrap;
+  padding: 6px 0 5px; border-bottom: 2px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-on-ink); }
+.nt-links a[aria-current="page"] { color: var(--nt-on-ink-lift); border-bottom-color: var(--nt-on-ink-lift); }
+.nt-chrome a:focus-visible { outline: 2px solid var(--nt-on-ink-lift); outline-offset: 3px; border-radius: 2px; }
+
+/* ---- page ---- */
+.masthead {
+  background: var(--nt-ink); color: var(--nt-on-ink);
+  border-bottom: 4px solid var(--nt-stamp);
+  padding: clamp(40px, 7vw, 64px) 0 clamp(28px, 5vw, 44px);
+}
+.eyebrow {
+  margin: 0 0 16px; font-family: var(--nt-mono);
+  font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--nt-on-ink-lift);
+}
+h1 {
+  margin: 0 0 16px; font-family: var(--nt-display);
+  font-optical-sizing: none; font-variation-settings: var(--nt-vf);
+  font-size: clamp(1.9rem, 1.5rem + 2vw, 2.75rem); font-weight: 600;
+  line-height: 1.08; letter-spacing: -0.02em;
+}
+.deck { margin: 0; font-size: 1rem; line-height: 1.6; color: var(--nt-on-ink-soft); max-width: 34rem; }
+
+main { padding: clamp(32px, 5vw, 52px) 0 clamp(40px, 6vw, 64px); }
+h2 {
+  font-family: var(--nt-display);
+  font-optical-sizing: none; font-variation-settings: var(--nt-vf);
+  font-size: 1.375rem; font-weight: 600; letter-spacing: -0.015em;
+  line-height: 1.25; margin: 2.25rem 0 0.75rem;
+}
+main > .shell > section:first-of-type h2 { margin-top: 0; }
+h3 {
+  font-family: var(--nt-sans); font-size: 1rem; font-weight: 650;
+  margin: 1.5rem 0 0.4rem; letter-spacing: -0.005em;
+}
+p, li { font-size: 15.5px; line-height: 1.65; color: var(--nt-ink-soft); }
+p { margin: 0 0 0.9rem; max-width: 38rem; }
+ul { margin: 0 0 0.9rem; padding-left: 1.15rem; max-width: 38rem; }
+li { margin-bottom: 0.4rem; }
+strong { color: var(--nt-ink); font-weight: 650; }
+a { color: var(--nt-stamp); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 3px; border-radius: 2px; }
+
+dl.meta {
+  margin: 0 0 1.25rem; padding: 16px 18px;
+  background: var(--nt-surface); border: 1px solid var(--nt-rule);
+  border-left: 3px solid var(--nt-stamp);
+  display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px;
+  font-size: 14.5px;
+}
+dl.meta dt {
+  font-family: var(--nt-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--nt-ink-soft); padding-top: 3px;
+}
+dl.meta dd { margin: 0; color: var(--nt-ink); }
+
+/* the contact block is deliberately unmissable while incomplete */
+.todo {
+  margin: 0 0 1.25rem; padding: 16px 18px;
+  background: var(--nt-hold-wash); border: 1px solid var(--nt-hold);
+  border-left: 3px solid var(--nt-hold);
+}
+.todo p { color: #6E4706; margin-bottom: 0; }
+.todo p + p { margin-top: 0.6rem; }
+.todo .label {
+  display: inline-block; margin-bottom: 6px;
+  font-family: var(--nt-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--nt-hold); font-weight: 700;
+}
+code {
+  font-family: var(--nt-mono); font-size: 0.9em;
+  background: var(--nt-stamp-wash); padding: 1px 5px; border-radius: 3px;
+  color: var(--nt-ink);
+}
+
+.issues { list-style: none; padding: 0; max-width: 38rem; }
+.issues li {
+  padding: 12px 0 12px 0; border-top: 1px solid var(--nt-rule);
+}
+.issues li:last-child { border-bottom: 1px solid var(--nt-rule); }
+.issues .what { display: block; color: var(--nt-ink); font-weight: 600; margin-bottom: 3px; }
+
+footer.colophon-wrap { border-top: 1px solid var(--nt-rule); }
+.colophon {
+  padding: 22px 0 44px; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline;
+  font-family: var(--nt-mono); font-size: 0.75rem; color: var(--nt-ink-soft);
+}
+.colophon a { color: var(--nt-stamp); text-underline-offset: 3px; }
+
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 92px; }
+  .nt-nav { flex-direction: column; align-items: stretch; justify-content: center; gap: 8px; padding: 0 16px; }
+  .nt-mark { align-self: flex-start; font-size: 19px; }
+  .nt-links { gap: 18px; }
+  dl.meta { grid-template-columns: 1fr; gap: 2px; }
+  dl.meta dd { margin-bottom: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="nt-chrome">
+  <a class="nt-skip" href="#nt-main">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">Accessibility statement</p>
+    <h1>How accessible this site is, and how to tell me it isn't</h1>
+    <p class="deck">This site publishes tools for checking accessibility, so it should be able to account for its own. Here is what was tested, what wasn't, and what is known to be imperfect.</p>
+  </div>
+</header>
+
+<main id="nt-main" tabindex="-1">
+  <div class="shell">
+
+    <section aria-labelledby="scope">
+      <h2 id="scope">Standard and scope</h2>
+      <dl class="meta">
+        <dt>Standard</dt>
+        <dd>WCAG 2.1 Level AA</dd>
+        <dt>Covers</dt>
+        <dd>All five pages at <code>nataschatruongmeck-stack.github.io/nagw2026/</code> — the index, this statement, and the three tools</dd>
+        <dt>Status</dt>
+        <dd>Partially conformant — see known issues below</dd>
+        <dt>Last checked</dt>
+        <dd>29 July 2026</dd>
+      </dl>
+      <p>"Partially conformant" is the honest answer rather than a hedge: the checks below were real, but they did not cover everything Level AA requires, and no assessment that skips screen-reader testing can claim full conformance.</p>
+    </section>
+
+    <section aria-labelledby="method">
+      <h2 id="method">How it was assessed</h2>
+      <p>Self-assessed. This has <strong>not</strong> been independently audited.</p>
+
+      <h3>What was tested</h3>
+      <ul>
+        <li><strong>Contrast (SC 1.4.3, 1.4.11)</strong> — every text and UI colour pair in the site's own CSS computed against the WCAG 2.1 formula. Text ranges from 6.5:1 to 17.8:1; component boundaries clear 3:1.</li>
+        <li><strong>Keyboard operability (SC 2.1.1, 2.4.3, 2.4.7)</strong> — tabbed through every page in Chrome. Focus order follows reading order, every stop has a visible focus ring, no traps, and skip links move focus rather than only scrolling.</li>
+        <li><strong>Reflow (SC 1.4.10)</strong> — checked at the narrowest viewport the browser allows, with every element measured against the viewport edge. Wide tables and code blocks are inside labelled, keyboard-scrollable regions.</li>
+        <li><strong>Text resize (SC 1.4.4)</strong> — root font size doubled to 200%. No clipping, no overlap, no horizontal scrolling.</li>
+        <li><strong>Structure (SC 1.3.1)</strong> — one <code>h1</code> per page, no skipped heading levels, landmarks present, data tables carry row and column scope.</li>
+        <li><strong>Motion (SC 2.3.3)</strong> — all animation is disabled under <code>prefers-reduced-motion</code>.</li>
+      </ul>
+
+      <h3>What was not tested</h3>
+      <ul>
+        <li><strong>No screen reader.</strong> Nothing here has been verified with VoiceOver, NVDA, or JAWS. This is the largest gap.</li>
+        <li><strong>No automated audit tool</strong> such as axe or Lighthouse.</li>
+        <li><strong>One browser only</strong> — Chrome on macOS. Not tested in Safari, Firefox, or on iOS or Android.</li>
+        <li><strong>No testing with disabled users.</strong></li>
+        <li><strong>Not tested in Windows High Contrast / <code>forced-colors</code> mode.</strong></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="known">
+      <h2 id="known">Known issues</h2>
+      <p>Listing these is deliberate. A statement claiming no known issues usually means nobody looked.</p>
+      <ul class="issues">
+        <li>
+          <span class="what">Screen-reader behaviour is unverified</span>
+          The tools build results dynamically, and whether those updates are announced usefully has not been confirmed with any screen reader. Treat the tools as untested with assistive technology.
+        </li>
+        <li>
+          <span class="what">Contrast results are not a conformance verdict</span>
+          Both tools compute ratios for flat, opaque colour only. They ignore alpha, overlays, gradients, and imagery behind text, and they say nothing about the other Level AA criteria. Each tool states this alongside its results.
+        </li>
+        <li>
+          <span class="what">Wide tables need horizontal scrolling on small screens</span>
+          The contrast matrix and the workflow guide's tables scroll sideways below roughly 640&nbsp;px. The regions are keyboard-reachable and labelled, but the data is genuinely harder to read at that size.
+        </li>
+        <li>
+          <span class="what">Colour is load-bearing in the matrix</span>
+          Results are also labelled in text (AAA, AA, AA&nbsp;LARGE, FAIL) and state the numeric ratio, so the information is not colour-only — but the layout does lean on colour to be read quickly.
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="feedback">
+      <h2 id="feedback">Reporting a problem</h2>
+
+      <div class="todo">
+        <span class="label">Placeholder — fill this in before sharing this page</span>
+        <p><strong>Add a contact route here.</strong> An accessibility statement without a working way to report a problem does not do the job a statement exists to do. Replace this box with an email address or form, and a response window you can actually meet — five working days is the usual commitment.</p>
+        <p>Until this is filled in, the fastest route is the repository's issue tracker, linked below.</p>
+      </div>
+
+      <p>If something on this site is unusable for you, please say so — including which page, what you were trying to do, and what browser or assistive technology you were using. Problems can also be raised on the <a href="https://github.com/nataschatruongmeck-stack/nagw2026/issues">project issue tracker</a>.</p>
+    </section>
+
+    <section aria-labelledby="tech">
+      <h2 id="tech">Technical notes</h2>
+      <p>Every page is a single HTML file with its CSS and JavaScript inlined. There are no third-party requests: the two fonts are served from this site. The tools run entirely in the browser — nothing you enter is transmitted anywhere.</p>
+      <p>Accessibility depends on JavaScript in both tools, since results are generated in the browser. The workflow guide and this statement are static and work without it.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="colophon-wrap">
+  <div class="shell">
+    <div class="colophon">
+      <span>Statement last reviewed 29 July 2026.</span>
+      <a href="https://github.com/nataschatruongmeck-stack/nagw2026">Source on GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
