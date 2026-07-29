@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Figma-first workflow — design system to shipped code</title>
+<meta name="description" content="A step-by-step guide to moving a design from Figma through Claude Design and Claude Code without losing the design system.">
+<style>
+/* ============================================================
+   No webfonts. No CDN. No network requests of any kind.
+   System stacks only — see colophon.
+   ============================================================ */
+
+:root {
+  /* ---- color ---- */
+  --ink:        #0E1826;
+  --ink-soft:   #46536A;
+  --paper:      #E8ECF1;
+  --surface:    #FFFFFF;
+  --rule:       #BFC9D6;
+  --rule-soft:  #DCE2EA;
+
+  --stamp:      #134E8B;  /* structural accent      8.3:1 on white */
+  --pass:       #0B6B4A;  /* verified               6.5:1 on white */
+  --hold:       #8C5A08;  /* human required         5.6:1 on white */
+  --fail:       #A32718;  /* blocked                7.5:1 on white */
+
+  --pass-wash:  #E7F1EC;
+  --hold-wash:  #F6EEDF;
+  --fail-wash:  #F7E9E6;
+  --stamp-wash: #E6EDF6;
+
+  /* ---- type ---- */
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* ---- space ---- */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4.5rem;
+
+  --measure: 34rem;
+  --wide: 60rem;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- shared shell ---------- */
+
+.shell {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+
+.narrow { max-width: var(--measure); }
+
+/* ---------- typography ---------- */
+
+h1, h2, h3, .eyebrow, .tag, .stage-head, .owner {
+  font-family: var(--sans);
+}
+
+h1 {
+  font-size: clamp(2.25rem, 1.6rem + 3.2vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  margin: 0 0 var(--s5);
+  max-width: 14ch;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  margin: 0;
+}
+
+h3 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: 650;
+  margin: 0 0 var(--s2);
+}
+
+p { margin: 0 0 var(--s4); }
+p:last-child { margin-bottom: 0; }
+
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  margin: 0 0 var(--s4);
+}
+
+.deck {
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 38rem;
+}
+
+code, kbd, samp, .mono { font-family: var(--mono); }
+
+code {
+  font-size: 0.875em;
+  background: var(--stamp-wash);
+  color: var(--stamp);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  word-break: break-word;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  background: var(--ink);
+  color: var(--surface);
+  padding: var(--s8) 0 var(--s7);
+  border-bottom: 4px solid var(--stamp);
+}
+
+.masthead .eyebrow { color: #8FB4DF; }
+.masthead .deck { color: #B9C4D4; }
+
+.masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid #2A3547;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: #8894A8;
+}
+
+/* ---------- signature: the specimen trace ---------- */
+
+.trace-block {
+  background: var(--surface);
+  margin: calc(var(--s7) * -1) auto var(--s7);
+  position: relative;
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 0 rgba(14, 24, 38, 0.04), 0 12px 32px -18px rgba(14, 24, 38, 0.4);
+}
+
+.trace-head {
+  padding: var(--s5) var(--s5) var(--s3);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.trace-head p {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  max-width: 46rem;
+}
+
+.trace-scroll {
+  overflow-x: auto;
+  padding: var(--s5);
+}
+
+.trace-scroll:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: -3px;
+}
+
+.trace {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 40rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.trace th, .trace td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--s3);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.trace thead th {
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.trace tbody th {
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--ink);
+  white-space: nowrap;
+  padding-right: var(--s5);
+}
+
+.trace tbody tr:last-child th,
+.trace tbody tr:last-child td { border-bottom: 0; }
+
+.chip {
+  display: inline-block;
+  padding: 0.3em 0.55em;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  line-height: 1.3;
+}
+
+.chip-live { background: var(--pass-wash); color: var(--pass); border-color: #BFDCCF; }
+.chip-dead { background: var(--fail-wash); color: var(--fail); border-color: #EBC9C3; }
+.chip-neutral { background: var(--paper); color: var(--ink-soft); border-color: var(--rule-soft); }
+
+.verdict {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.verdict-pass { color: var(--pass); }
+.verdict-fail { color: var(--fail); }
+
+.trace-foot {
+  padding: var(--s4) var(--s5);
+  background: var(--paper);
+  border-top: 1px solid var(--rule-soft);
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.trace-foot strong { color: var(--ink); }
+
+/* ---------- prerequisite stop-block ---------- */
+
+.stop {
+  background: var(--hold-wash);
+  border-left: 4px solid var(--hold);
+  padding: var(--s5);
+  margin: 0 auto var(--s8);
+  max-width: var(--wide);
+}
+
+.stop h2 {
+  font-size: 1.125rem;
+  color: var(--hold);
+  margin-bottom: var(--s2);
+}
+
+.stop p { max-width: 46rem; font-size: 0.9375rem; }
+
+/* ---------- phases ---------- */
+
+.phase { margin-bottom: var(--s8); }
+
+.phase-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s4);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s6);
+  border-bottom: 2px solid var(--ink);
+}
+
+.phase-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--stamp);
+  padding-top: 0.2em;
+}
+
+.phase-note {
+  margin-left: auto;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+/* ---------- steps ---------- */
+
+.step {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: var(--s5);
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.step:last-of-type { border-bottom: 0; }
+
+.step-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: flex-start;
+}
+
+.step-num {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+}
+
+.owner {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.3em 0.5em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.owner-human { background: var(--hold-wash); color: var(--hold); }
+.owner-delegated { background: var(--stamp-wash); color: var(--stamp); }
+.owner-gate { background: var(--pass-wash); color: var(--pass); }
+
+.step-body { max-width: 42rem; }
+.step-body p { font-size: 0.9375rem; }
+
+.aside {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--rule);
+  padding-left: var(--s4);
+  margin-top: var(--s4);
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: var(--s3) 0 0;
+  font-size: 0.9375rem;
+}
+
+.checklist li {
+  padding: var(--s2) 0 var(--s2) var(--s5);
+  position: relative;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.checklist li:last-child { border-bottom: 0; }
+
+.checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.05em;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1.5px solid var(--rule);
+  background: var(--surface);
+}
+
+/* ---------- code blocks ---------- */
+
+.snippet {
+  background: var(--ink);
+  color: #D8E0EC;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  padding: var(--s4);
+  margin: var(--s4) 0 0;
+  overflow-x: auto;
+  white-space: pre;
+  border-radius: 2px;
+}
+
+.snippet:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+.snippet .cmt { color: #8894A8; }
+.snippet .key { color: #8FD4B0; }
+
+/* ---------- fork: the two paths ---------- */
+
+.fork {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--s5);
+}
+
+.path {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--stamp);
+  padding: var(--s5);
+}
+
+.tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  display: block;
+  margin-bottom: var(--s2);
+}
+
+.path-when {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s4);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.path ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.9375rem;
+}
+
+.path li { margin-bottom: var(--s3); }
+.path li:last-child { margin-bottom: 0; }
+
+/* ---------- ownership table ---------- */
+
+.owns-scroll { overflow-x: auto; }
+
+.owns {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 30rem;
+  font-size: 0.9375rem;
+  background: var(--surface);
+}
+
+.owns th, .owns td {
+  text-align: left;
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.owns thead th {
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+}
+
+.owns tbody th { font-weight: 400; font-family: var(--serif); }
+
+.owns td { width: 11rem; }
+
+/* ---------- closing ---------- */
+
+.closing {
+  background: var(--ink);
+  color: #C6D0DE;
+  padding: var(--s8) 0;
+  margin-top: var(--s8);
+}
+
+.closing h2 { color: var(--surface); margin-bottom: var(--s4); }
+.closing p { max-width: 40rem; }
+.closing strong { color: var(--surface); }
+
+.colophon {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  line-height: 1.8;
+  color: #7A8598;
+  margin-top: var(--s7);
+  padding-top: var(--s4);
+  border-top: 1px solid #2A3547;
+}
+
+/* ---------- focus + motion floor ---------- */
+
+a { color: var(--stamp); }
+
+:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+.masthead :focus-visible,
+.closing :focus-visible { outline-color: #8FB4DF; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.shown { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 40rem) {
+  .step { grid-template-columns: 1fr; gap: var(--s3); }
+  .step-rail { flex-direction: row; align-items: center; gap: var(--s3); }
+  .phase-head { flex-wrap: wrap; }
+  .phase-note { margin-left: 0; text-align: left; width: 100%; }
+  .trace-block { margin-top: 0; }
+  .masthead { padding-bottom: var(--s6); }
+}
+
+/* ---------- print ---------- */
+
+@media print {
+  body { background: #fff; font-size: 10pt; }
+  .masthead, .closing { background: #fff; color: #000; border-bottom: 2px solid #000; }
+  .masthead .deck, .closing p { color: #000; }
+  .masthead .eyebrow { color: #000; }
+  .snippet { background: #fff; color: #000; border: 1px solid #999; }
+  .trace-block { box-shadow: none; margin-top: 1rem; }
+  .phase, .step { break-inside: avoid; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+<style>
+/* ===== site chrome — Natascha Truong =============================
+   Self-contained: every value hard-set so the bar renders identically
+   on each page regardless of that page's own token set.
+   ================================================================= */
+:root {
+  --nt-nav-h:     54px;
+  --nt-case:      #14181D;
+  --nt-case-lift: #1B2027;
+  --nt-edge:      #2B323B;
+  --nt-etch:      #DCE2E8;
+  --nt-etch-soft: #8B96A3;
+  --nt-brass:     #C89440;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-brass); color: #14181D;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box;
+  height: var(--nt-nav-h);   /* border included, so --nt-nav-h is the true total */
+  background: var(--nt-case);
+  border-bottom: 1px solid var(--nt-brass);
+  font-family: var(--nt-sans);
+  line-height: normal;
+}
+.nt-nav {
+  height: 100%;
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 22px;
+  max-width: 1200px; margin: 0 auto;
+}
+.nt-mark {
+  font-family: var(--nt-mono);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--nt-etch); text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 0 3px;
+  border-bottom: 1px solid var(--nt-brass);
+  flex: none;
+}
+.nt-mark:hover { color: #fff; }
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links li { margin: 0; padding: 0; }
+.nt-links li::before { content: none; }
+.nt-links a {
+  display: block;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-etch-soft); text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 0 5px;
+  border-bottom: 1px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-etch); }
+.nt-links a[aria-current="page"] {
+  color: var(--nt-etch);
+  border-bottom-color: var(--nt-brass);
+}
+.nt-chrome a:focus-visible {
+  outline: 2px solid var(--nt-brass);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 88px; }
+  .nt-nav {
+    flex-direction: column; align-items: stretch;
+    justify-content: center; gap: 10px; padding: 0 16px;
+  }
+  .nt-mark { align-self: flex-start; font-size: 11px; letter-spacing: 0.18em; }
+  .nt-links { gap: 18px; }
+}</style>
+</head>
+<body>
+<div class="nt-chrome">
+  <a class="nt-skip" href="#nt-main">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html" aria-current="page">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">Figma-first pipeline</p>
+    <h1>Where the value goes</h1>
+    <p class="deck">A design system only works if a decision you make once survives every tool it passes through. This is the route from a Figma comp to shipped code, and the checks that catch it when the route breaks.</p>
+    <div class="masthead-meta">
+      <span>Figma → Claude Design → Claude Code</span>
+      <span>WCAG 2.1 AA</span>
+      <span>Read time ~8 min</span>
+    </div>
+  </div>
+</header>
+
+<main id="nt-main">
+
+  <!-- ============ SIGNATURE: SPECIMEN TRACE ============ -->
+  <div class="shell">
+    <section class="trace-block reveal" aria-labelledby="trace-title">
+      <div class="trace-head">
+        <h2 id="trace-title">Follow one value</h2>
+        <p>Here is a single colour making the trip. In the top row it is bound to a Figma Variable. In the bottom row someone typed the hex directly into the fill. Same colour, same comp, same designer — and only one of them arrives.</p>
+      </div>
+
+      <div class="trace-scroll" tabindex="0" role="region" aria-label="Specimen trace table, scrollable">
+        <table class="trace">
+          <caption class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">How a token value appears at each stage of the pipeline</caption>
+          <thead>
+            <tr>
+              <th scope="col">Origin</th>
+              <th scope="col">1 · tokens.json</th>
+              <th scope="col">2 · Figma</th>
+              <th scope="col">3 · Handoff</th>
+              <th scope="col">4 · Code</th>
+              <th scope="col">Gate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Bound to a Variable</th>
+              <td><span class="chip chip-neutral">color.action.default</span></td>
+              <td><span class="chip chip-live">color/action/default</span></td>
+              <td><span class="chip chip-live">color/action/default</span></td>
+              <td><span class="chip chip-live">var(--color-action-default)</span></td>
+              <td><span class="verdict verdict-pass">Passes</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Typed in by hand</th>
+              <td><span class="chip chip-neutral">color.action.default</span></td>
+              <td><span class="chip chip-dead">#0F5C8C · local style</span></td>
+              <td><span class="chip chip-dead">#0F5C8C</span></td>
+              <td><span class="chip chip-dead">#0F5C8C</span></td>
+              <td><span class="verdict verdict-fail">Build fails</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="trace-foot">
+        <strong>The name is the payload.</strong> A hex code tells you what a thing looked like on one day. A token name tells you what the thing <em>is</em> — which is the only version of the information that can be rebranded, themed, contrast-checked, or reasoned about by anything downstream.
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PREREQ ============ -->
+  <div class="shell">
+    <section class="stop" aria-labelledby="prereq-title">
+      <h2 id="prereq-title">Before anything else</h2>
+      <p>Your tokens must already be in Figma as Variables, synced <em>from</em> <code>tokens.json</code>. If the Figma styles were created by hand in Figma, stop here and fix that first. Everything below assumes one source of truth; with two, the rest of this guide is theatre.</p>
+    </section>
+  </div>
+
+  <!-- ============ PHASE 1 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p1">
+      <div class="phase-head">
+        <span class="phase-num">PHASE 1</span>
+        <h2 id="p1">Design in Figma</h2>
+        <span class="phase-note">Judgment lives here</span>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">01</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Sync the Variables before you start</h3>
+          <p>Pull from <code>tokens.json</code> at the beginning of the session, not the end. A stale Figma file is more dangerous than no Figma file, because it still looks authoritative.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">02</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Bind every value — no typed hex, no typed pixels</h3>
+          <p>Fills, strokes, corner radii, gaps, text styles: all bound to Variables. This is the one decision that determines whether the rest of the workflow functions, because it is the difference between the two rows in the trace above.</p>
+          <p class="aside">If a design needs a value that has no token, that is a real finding. Add it to <code>tokens.json</code> and re-sync. Do not solve it locally.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">03</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Use Auto Layout throughout</h3>
+          <p>Not for tidiness. Auto Layout is the only way the file records <em>intent</em> — direction, spacing, alignment, and how things resize. A frame with absolutely positioned children exports as coordinates, which describes exactly one screen width and nothing else.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">04</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Write down what the picture cannot hold</h3>
+          <p>Two minutes in a text file. This is the difference between a specification and a decoration:</p>
+          <ul class="checklist">
+            <li>Every interactive state — hover, focus, active, disabled, error, loading, empty</li>
+            <li>Focus order and keyboard behaviour</li>
+            <li>What a screen reader should announce, and when</li>
+            <li>Breakpoint behaviour — what reflows, what stacks, what is removed</li>
+            <li>Which text is real content and which is placeholder</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">05</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Audit the comp before it leaves</h3>
+          <p>Contrast on every text-and-background pairing. Touch targets at 44&nbsp;px minimum. Fixing this here costs minutes; fixing it after code exists costs a cycle, and fixing it after launch costs a complaint.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PHASE 2 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p2">
+      <div class="phase-head">
+        <span class="phase-num">PHASE 2</span>
+        <h2 id="p2">Pick a route</h2>
+        <span class="phase-note">One question: is the design settled?</span>
+      </div>
+
+      <div class="fork">
+
+        <article class="path">
+          <span class="tag">Path A</span>
+          <h3>Figma → Claude Code</h3>
+          <p class="path-when">Take this route when the comp is settled and you are implementing a known thing.</p>
+          <ol>
+            <li>
+              <strong>Connect Dev Mode MCP.</strong> Select the frame in Figma, then ask Claude Code for the design context of your current selection.
+              <p class="aside">Check what comes back. You want variable <em>names</em>. If you are seeing hex codes, the Variables are not bound — return to step 02. Do not work around it; the workaround <em>is</em> the drift.</p>
+            </li>
+            <li><strong>Hand over both artefacts.</strong> The Figma reference and the written notes from step 04. The notes are not optional — they are the half of the spec the image could not carry.</li>
+            <li><strong>Constrain the work explicitly</strong> before it starts, using the brief below.</li>
+            <li><strong>Read the diff, not the summary.</strong> A summary is a claim about the diff. The diff is the diff.</li>
+          </ol>
+        </article>
+
+        <article class="path">
+          <span class="tag">Path B</span>
+          <h3>Figma → Claude Design → Claude Code</h3>
+          <p class="path-when">Take this route when the comp is a starting point and you expect to iterate — variants, breakpoints, states the static file never showed.</p>
+          <ol>
+            <li><strong>Export the frame as PNG, plus the variable list as text.</strong> There is no native pipe between Figma and Claude Design. The text list is what keeps the token names alive across the gap.</li>
+            <li><strong>Iterate visually.</strong> Explore what a static file cannot show: the error state, the empty state, the 320&nbsp;px version, the version where the heading runs to ninety characters.</li>
+            <li><strong>Run a drift check before you leave.</strong> Scan the output for any literal hex, <code>px</code>, or <code>rem</code>. It fails often enough that this is worth doing every single time.</li>
+            <li><strong>Carry forward the decisions, not the code.</strong> Describe what you settled on, then continue through Path A. The sketch resolved questions; the repo is where the real thing gets built, against real files, with real gates.</li>
+          </ol>
+        </article>
+
+      </div>
+
+      <div class="step" style="border-bottom:0; padding-top: var(--s6);">
+        <div class="step-rail">
+          <span class="step-num">BRIEF</span>
+          <span class="owner owner-delegated">Delegated</span>
+        </div>
+        <div class="step-body">
+          <h3>What to tell Claude Code before it starts</h3>
+          <p>Keep this in a <code>CLAUDE.md</code> file at the root of the repo so you are not retyping it, and so it applies to everyone on the project.</p>
+          <pre class="snippet" tabindex="0"><span class="cmt">## Tokens</span>
+Use only CSS custom properties from build/css/variables.css.
+Reference semantic tokens (<span class="key">--color-action-*</span>), never
+primitives (<span class="key">--core-*</span>).
+If a value has no matching token, STOP and say so.
+Do not introduce one.
+
+<span class="cmt">## Scope</span>
+Implement every state listed in states.md, not just the default.
+Do not modify tokens/*.json. Do not edit build/ output.
+
+<span class="cmt">## Verification</span>
+Before reporting the work complete, run:
+  npm run lint:tokens
+  npm run test:a11y
+Paste the actual output. Do not describe what the
+commands would return.</pre>
+          <p class="aside">That last instruction is doing more work than it looks like. Asked to confirm, a model will readily narrate plausible command output it never ran. Requiring the paste turns a claim back into evidence.</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ============ PHASE 3 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p3">
+      <div class="phase-head">
+        <span class="phase-num">PHASE 3</span>
+        <h2 id="p3">Gates</h2>
+        <span class="phase-note">Identical on both routes</span>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">06</span>
+          <span class="owner owner-gate">Automated</span>
+        </div>
+        <div class="step-body">
+          <h3>Let the machine catch the mechanical failures</h3>
+          <p><code>lint:tokens</code> rejects any off-system colour, spacing, or type value. <code>test:a11y</code> catches contrast, missing accessible names, and heading structure. Both run from committed scripts, not from a command someone remembers.</p>
+          <p class="aside">Automated tooling reliably finds contrast, labelling, and structural problems. Published estimates of total WCAG coverage cluster somewhere between a third and a half, depending on the tool, the page, and how you count — treat any single figure with suspicion, including that one.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">07</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Do the part that cannot be delegated</h3>
+          <p>These four checks cover the criteria no linter reaches — focus order, meaningful sequence, and reflow:</p>
+          <ul class="checklist">
+            <li>Tab through the whole thing. Can you see where you are, always?</li>
+            <li>Screen reader on anything interactive. Does it announce what it does?</li>
+            <li>Resize to 320&nbsp;px wide. Does anything scroll sideways?</li>
+            <li>Text zoom to 200%. Does anything clip or overlap?</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">08</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Compare back to the comp — for intent, not pixels</h3>
+          <p>The question is not whether it matches. It is whether it reads the way the design meant it to read: same hierarchy, same emphasis, same thing catching the eye first.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ OWNERSHIP ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="own">
+      <div class="phase-head">
+        <span class="phase-num">REFERENCE</span>
+        <h2 id="own">Who owns what</h2>
+      </div>
+
+      <p class="deck narrow" style="margin-bottom: var(--s5); font-size: 1rem;">The split is not arbitrary, and it is worth being able to defend out loud: judgment stays where mistakes spread quietly and cost a lot to undo; execution is handed off where mistakes are local and immediately visible.</p>
+
+      <div class="owns-scroll" tabindex="0" role="region" aria-label="Ownership table, scrollable">
+        <table class="owns">
+          <thead>
+            <tr>
+              <th scope="col">Stage</th>
+              <th scope="col">Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Token values and relationships</th><td><span class="owner owner-human">Human only</span></td></tr>
+            <tr><th scope="row">Contrast pairing decisions</th><td><span class="owner owner-human">Human only</span></td></tr>
+            <tr><th scope="row">Component states and behaviour</th><td><span class="owner owner-human">Human only</span></td></tr>
+            <tr><th scope="row">Layout exploration and variants</th><td><span class="owner owner-delegated">Delegated</span></td></tr>
+            <tr><th scope="row">Implementation against the spec</th><td><span class="owner owner-delegated">Delegated</span></td></tr>
+            <tr><th scope="row">Token and accessibility linting</th><td><span class="owner owner-gate">Automated</span></td></tr>
+            <tr><th scope="row">Manual accessibility verification</th><td><span class="owner owner-human">Human only</span></td></tr>
+            <tr><th scope="row">Merge approval</th><td><span class="owner owner-human">Human only</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<footer class="closing">
+  <div class="shell">
+    <h2>What this does, and what it doesn't</h2>
+    <p>None of this makes generated output correct. What it does is make <strong>unverified</strong> output expensive to ship: the linter blocks, the accessibility test fails, the manual checklist sits unticked. That is a smaller promise than "safe", and it is the one that holds up under questioning.</p>
+    <p>The residual risk is worth naming plainly. Every gate above filters a <em>known</em> failure class. A component that passes all of them and is still confusing to use remains entirely a human problem, and no amount of tooling changes that.</p>
+
+    <p class="colophon">
+      Colophon — Single file. No build step. No webfonts, no CDN, no external requests of any kind: type is set in Charter / Cambria / Georgia with system sans and mono, which is also how you avoid a third-party font call in a government context.<br>
+      Built to the floor it describes: semantic landmarks, real tables with row and column scope, visible focus, keyboard-scrollable overflow regions, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included.
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var targets = document.querySelectorAll('.reveal');
+
+  if (reduce.matches || !('IntersectionObserver' in window)) {
+    targets.forEach(function (el) { el.classList.add('shown'); });
+    return;
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('shown');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  targets.forEach(function (el) { io.observe(el); });
+})();
+</script>
+
+</body>
+</html>

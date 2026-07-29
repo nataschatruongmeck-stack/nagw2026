@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCAG 2.1 Contrast Matrix — AA &amp; AAA</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --ink: #1a1d21;
+    --ink-soft: #5b6472;
+    --line: #dfe3e8;
+    --accent: #0b5cad;
+    --accent-ink: #ffffff;
+    --aaa: #0d5c3f;
+    --pass: #0b5cad;
+    --pass-bg: #e2f4e9;
+    --large: #8a5a00;
+    --large-bg: #fdf0d5;
+    --fail: #b3261e;
+    --fail-bg: #fbeaea;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 20px 28px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 70ch; }
+  main { padding: 24px 28px 64px; max-width: 1280px; margin: 0 auto; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .panel h2 { margin: 0 0 8px; font-size: 15px; }
+  .hint { color: var(--ink-soft); font-size: 13px; margin: 0 0 12px; }
+  textarea {
+    width: 100%;
+    min-height: 130px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    resize: vertical;
+    color: var(--ink);
+    background: var(--surface);
+  }
+  textarea:focus { outline: 3px solid #9cc3e8; outline-offset: 1px; border-color: var(--accent); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); }
+  button.primary:hover { background: #094a8c; }
+  button.secondary { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+  button.secondary:hover { background: #eef4fa; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible { outline: 3px solid #9cc3e8; outline-offset: 2px; }
+  label.toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; cursor: pointer; }
+  .error { color: var(--fail); font-size: 13px; margin-top: 10px; white-space: pre-line; }
+
+  /* Palette strip */
+  .palette { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    display: flex; align-items: center; gap: 9px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 12px 6px 6px;
+    background: var(--surface);
+    font-size: 13px;
+  }
+  .chip .dot { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(0,0,0,.18); }
+  .chip code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink-soft); }
+  .chip .name { font-weight: 600; }
+
+  /* Matrix */
+  .matrix-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0; text-align: center; }
+  thead th, tbody th {
+    background: #fafbfc;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 10px;
+    min-width: 96px;
+    vertical-align: middle;
+  }
+  tbody th { position: sticky; left: 0; z-index: 1; text-align: left; }
+  .axis-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+  .head-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,.2); vertical-align: -2px; margin-right: 6px; }
+  th code { display: block; font-size: 11px; font-weight: 400; color: var(--ink-soft); margin-top: 2px; }
+
+  .cell {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    min-height: 84px;
+    padding: 10px 8px;
+  }
+  .cell .sample { font-size: 21px; font-weight: 700; line-height: 1; }
+  .cell .ratio { font-size: 12px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .badge {
+    font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    padding: 2px 7px; border-radius: 999px;
+    background: rgba(255,255,255,.92); border: 1px solid rgba(0,0,0,.15);
+  }
+  .badge.aaa   { color: #ffffff; background: var(--aaa); border-color: var(--aaa); }
+  .badge.pass  { color: var(--pass); }
+  .badge.large { color: var(--large); }
+  .badge.fail  { color: var(--fail); }
+  td.same { background: repeating-linear-gradient(45deg, #f2f3f5 0 8px, #e9ebee 8px 16px); }
+  td.same .cell { color: var(--ink-soft); font-size: 12px; }
+  td.dim .cell { opacity: .25; }
+
+  /* Pairs list */
+  .pairs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .pair-card { border-radius: 8px; border: 1px solid rgba(0,0,0,.14); padding: 14px; }
+  .pair-card .demo { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+  .pair-card .demo-small { font-size: 12px; }
+  .pair-card .meta {
+    margin-top: 10px; background: rgba(255,255,255,.94);
+    border-radius: 6px; padding: 6px 9px; font-size: 11.5px; color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-soft); margin: 12px 2px 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .summary { font-size: 14px; margin: 0 0 14px; }
+  .summary strong { font-variant-numeric: tabular-nums; }
+  section[hidden] { display: none; }
+</style>
+<style>
+/* ===== site chrome — Natascha Truong =============================
+   Self-contained: every value hard-set so the bar renders identically
+   on each page regardless of that page's own token set.
+   ================================================================= */
+:root {
+  --nt-nav-h:     54px;
+  --nt-case:      #14181D;
+  --nt-case-lift: #1B2027;
+  --nt-edge:      #2B323B;
+  --nt-etch:      #DCE2E8;
+  --nt-etch-soft: #8B96A3;
+  --nt-brass:     #C89440;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-brass); color: #14181D;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box;
+  height: var(--nt-nav-h);   /* border included, so --nt-nav-h is the true total */
+  background: var(--nt-case);
+  border-bottom: 1px solid var(--nt-brass);
+  font-family: var(--nt-sans);
+  line-height: normal;
+}
+.nt-nav {
+  height: 100%;
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 22px;
+  max-width: 1200px; margin: 0 auto;
+}
+.nt-mark {
+  font-family: var(--nt-mono);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--nt-etch); text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 0 3px;
+  border-bottom: 1px solid var(--nt-brass);
+  flex: none;
+}
+.nt-mark:hover { color: #fff; }
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links li { margin: 0; padding: 0; }
+.nt-links li::before { content: none; }
+.nt-links a {
+  display: block;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-etch-soft); text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 0 5px;
+  border-bottom: 1px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-etch); }
+.nt-links a[aria-current="page"] {
+  color: var(--nt-etch);
+  border-bottom-color: var(--nt-brass);
+}
+.nt-chrome a:focus-visible {
+  outline: 2px solid var(--nt-brass);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 88px; }
+  .nt-nav {
+    flex-direction: column; align-items: stretch;
+    justify-content: center; gap: 10px; padding: 0 16px;
+  }
+  .nt-mark { align-self: flex-start; font-size: 11px; letter-spacing: 0.18em; }
+  .nt-links { gap: 18px; }
+}</style>
+</head>
+<body>
+<div class="nt-chrome">
+  <a class="nt-skip" href="#nt-main">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="contrast-matrix.html" aria-current="page">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+
+<header>
+  <h1>WCAG 2.1 Contrast Matrix — AA &amp; AAA</h1>
+  <p>Paste your palette below. Contrast is computed with the exact WCAG 2.1 relative-luminance formula; pass/fail uses the unrounded ratio. AA requires 4.5:1 for normal text and 3:1 for large text (≥ 24px, or ≥ 18.66px bold); AAA requires 7:1 and 4.5:1.</p>
+</header>
+
+<main id="nt-main">
+  <section class="panel">
+    <h2>1 · Colors</h2>
+    <p class="hint">One color per line. Optional name before the value, e.g. <code>primary: #0B5CAD</code>. Accepts <code>#RGB</code>, <code>#RRGGBB</code>, <code>rgb(r, g, b)</code>, or comma/space-separated hex codes.</p>
+    <textarea id="input" spellcheck="false" aria-label="Color list">ink: #1A1D21
+paper: #FFFFFF
+primary: #0B5CAD
+accent: #E85D2F
+mist: #9AA5B1
+forest: #0D7A3F</textarea>
+    <div class="controls">
+      <button class="primary" id="build">Build matrix</button>
+      <label class="toggle"><input type="checkbox" id="passOnly"> Show passing pairs only</label>
+      <button class="secondary" id="download" disabled>Download tokens JSON</button>
+    </div>
+    <div class="error" id="error" role="alert"></div>
+  </section>
+
+  <section class="panel" id="paletteSection" hidden>
+    <h2>2 · Palette</h2>
+    <div class="palette" id="palette"></div>
+  </section>
+
+  <section class="panel" id="matrixSection" hidden>
+    <h2>3 · Contrast matrix — rows are backgrounds, columns are text colors</h2>
+    <p class="summary" id="summary"></p>
+    <div class="matrix-wrap"><table id="matrix" aria-describedby="summary"></table></div>
+    <div class="legend">
+      <span><span class="badge aaa">AAA</span> passes AAA for all text sizes (≥ 7:1)</span>
+      <span><span class="badge pass">AA</span> passes AA for all text sizes, and AAA for large text (≥ 4.5:1)</span>
+      <span><span class="badge large">AA LARGE</span> passes AA for large text only (≥ 3:1)</span>
+      <span><span class="badge fail">FAIL</span> below 3:1 — don’t use for text</span>
+    </div>
+  </section>
+
+  <section class="panel" id="pairsSection" hidden>
+    <h2>4 · Usable combinations (AA)</h2>
+    <p class="hint">Every ordered pair that passes AA, rendered as it would appear. “Large text only” cards pass 3:1 but not 4.5:1.</p>
+    <div class="pairs-grid" id="pairs"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+/* ---------- WCAG 2.1 math (exact per spec) ----------
+   https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+   https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio      */
+
+function srgbToLinear(channel8) {
+  const c = channel8 / 255;
+  return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(rgb) {
+  return 0.2126 * srgbToLinear(rgb.r)
+       + 0.7152 * srgbToLinear(rgb.g)
+       + 0.0722 * srgbToLinear(rgb.b);
+}
+
+function contrastRatio(rgbA, rgbB) {
+  const la = relativeLuminance(rgbA);
+  const lb = relativeLuminance(rgbB);
+  const lighter = Math.max(la, lb);
+  const darker  = Math.min(la, lb);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+const AA_NORMAL  = 4.5;
+const AA_LARGE   = 3.0;
+const AAA_NORMAL = 7.0;
+const AAA_LARGE  = 4.5;
+
+/* ---------- parsing ---------- */
+
+function parseColorValue(str) {
+  const s = str.trim();
+  let m = s.match(/^#?([0-9a-f]{6})$/i);
+  if (m) {
+    const h = m[1];
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+  m = s.match(/^#?([0-9a-f]{3})$/i);
+  if (m) {
+    const h = m[1];
+    return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+  }
+  m = s.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i);
+  if (m) {
+    const [r,g,b] = [+m[1], +m[2], +m[3]];
+    if (r > 255 || g > 255 || b > 255) return null;
+    return { r, g, b };
+  }
+  return null;
+}
+
+function toHex(rgb) {
+  const h = n => n.toString(16).padStart(2, "0").toUpperCase();
+  return "#" + h(rgb.r) + h(rgb.g) + h(rgb.b);
+}
+
+function slugify(name, fallback) {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return slug || fallback;
+}
+
+function parseInput(text) {
+  const colors = [];
+  const errors = [];
+  const seenHex = new Map();
+  const seenNames = new Set();
+  let auto = 0;
+
+  const lines = text.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("//"));
+  for (const line of lines) {
+    // "name: value" | "name = value" | "name value" | bare value(s)
+    let entries = [];
+    const named = line.match(/^(.*?)\s*[:=]\s*(.+)$/);
+    if (named) {
+      entries.push({ name: named[1], value: named[2] });
+    } else if (parseColorValue(line)) {
+      entries.push({ name: null, value: line });
+    } else {
+      // possibly several values on one line, or "name value"
+      const parts = line.split(/[,\s]+/).filter(Boolean);
+      if (parts.length >= 2 && !parseColorValue(parts[0]) && parseColorValue(parts[parts.length - 1])) {
+        entries.push({ name: parts.slice(0, -1).join(" "), value: parts[parts.length - 1] });
+      } else {
+        entries = parts.map(p => ({ name: null, value: p }));
+      }
+    }
+
+    for (const entry of entries) {
+      const rgb = parseColorValue(entry.value);
+      if (!rgb) { errors.push(`Could not parse “${entry.value}” — use #RGB, #RRGGBB, or rgb(r, g, b).`); continue; }
+      const hex = toHex(rgb);
+      if (seenHex.has(hex)) continue; // silently dedupe identical colors
+      auto++;
+      let name = slugify(entry.name || "", "color-" + auto);
+      while (seenNames.has(name)) name += "-2";
+      seenNames.add(name);
+      seenHex.set(hex, true);
+      colors.push({ name, hex, rgb, luminance: relativeLuminance(rgb) });
+    }
+  }
+  return { colors, errors };
+}
+
+/* ---------- rendering ---------- */
+
+const $ = id => document.getElementById(id);
+let currentColors = [];
+let currentPairs = [];
+
+function classify(ratio) {
+  if (ratio >= AAA_NORMAL) return "aaa";
+  if (ratio >= AA_NORMAL)  return "pass";
+  if (ratio >= AA_LARGE)   return "large";
+  return "fail";
+}
+
+function badge(cls) {
+  if (cls === "aaa")   return '<span class="badge aaa">AAA</span>';
+  if (cls === "pass")  return '<span class="badge pass">AA</span>';
+  if (cls === "large") return '<span class="badge large">AA LARGE</span>';
+  return '<span class="badge fail">FAIL</span>';
+}
+
+function formatRatio(r) {
+  return (Math.round(r * 100) / 100).toFixed(2) + ":1";
+}
+
+function build() {
+  const { colors, errors } = parseInput($("input").value);
+  $("error").textContent = errors.join("\n");
+  if (colors.length < 2) {
+    if (!errors.length) $("error").textContent = "Enter at least two colors.";
+    ["paletteSection","matrixSection","pairsSection"].forEach(id => $(id).hidden = true);
+    $("download").disabled = true;
+    currentColors = []; currentPairs = [];
+    return;
+  }
+
+  currentColors = colors;
+  currentPairs = [];
+  for (const bg of colors) {
+    for (const fg of colors) {
+      if (bg === fg) continue;
+      const ratio = contrastRatio(bg.rgb, fg.rgb);
+      currentPairs.push({
+        background: bg, text: fg, ratio,
+        passesNormal:    ratio >= AA_NORMAL,
+        passesLarge:     ratio >= AA_LARGE,
+        passesAAANormal: ratio >= AAA_NORMAL,
+        passesAAALarge:  ratio >= AAA_LARGE
+      });
+    }
+  }
+
+  renderPalette(colors);
+  renderMatrix(colors);
+  renderPairs();
+  $("download").disabled = false;
+  $("paletteSection").hidden = false;
+  $("matrixSection").hidden = false;
+  $("pairsSection").hidden = false;
+}
+
+function renderPalette(colors) {
+  $("palette").innerHTML = colors.map(c =>
+    `<span class="chip"><span class="dot" style="background:${c.hex}"></span><span class="name">${c.name}</span><code>${c.hex}</code></span>`
+  ).join("");
+}
+
+function renderMatrix(colors) {
+  const passOnly = $("passOnly").checked;
+  let html = "<thead><tr><th><span class='axis-label'>bg ↓ · text →</span></th>";
+  for (const c of colors) {
+    html += `<th scope="col"><span class="head-swatch" style="background:${c.hex}"></span>${c.name}<code>${c.hex}</code></th>`;
+  }
+  html += "</tr></thead><tbody>";
+
+  const pairMap = new Map(currentPairs.map(p => [p.background.name + "\0" + p.text.name, p]));
+
+  for (const bg of colors) {
+    html += `<tr><th scope="row"><span class="head-swatch" style="background:${bg.hex}"></span>${bg.name}<code>${bg.hex}</code></th>`;
+    for (const fg of colors) {
+      if (bg === fg) {
+        html += `<td class="same"><div class="cell">—</div></td>`;
+        continue;
+      }
+      const p = pairMap.get(bg.name + "\0" + fg.name);
+      const cls = classify(p.ratio);
+      const dim = passOnly && cls === "fail" ? " dim" : "";
+      html += `<td class="${dim}" style="background:${bg.hex}">
+        <div class="cell">
+          <span class="sample" style="color:${fg.hex}">Aa</span>
+          <span class="ratio" style="color:${fg.hex}">${formatRatio(p.ratio)}</span>
+          ${badge(cls)}
+        </div></td>`;
+    }
+    html += "</tr>";
+  }
+  html += "</tbody>";
+  $("matrix").innerHTML = html;
+
+  const nAAA = currentPairs.filter(p => p.passesAAANormal).length;
+  const nPass = currentPairs.filter(p => p.passesNormal).length;
+  const nLargeOnly = currentPairs.filter(p => p.passesLarge && !p.passesNormal).length;
+  $("summary").innerHTML =
+    `<strong>${nPass}</strong> of ${currentPairs.length} ordered pairs pass AA for all text sizes ` +
+    `(<strong>${nAAA}</strong> of those also pass AAA); ` +
+    `<strong>${nLargeOnly}</strong> more pass AA for large text only.`;
+}
+
+function renderPairs() {
+  const cards = currentPairs
+    .filter(p => p.passesLarge)
+    .sort((a, b) => b.ratio - a.ratio)
+    .map(p => {
+      const level = p.passesAAANormal ? "AAA — all text sizes"
+                  : p.passesNormal    ? "AA — all sizes · AAA large only"
+                  :                     "AA — large text only";
+      const small = p.passesNormal
+        ? `<div class="demo-small" style="color:${p.text.hex}">Body text at 14px also passes.</div>`
+        : `<div class="demo-small" style="color:${p.text.hex}">Use at ≥ 24px (or 18.66px bold) only.</div>`;
+      return `<div class="pair-card" style="background:${p.background.hex}">
+        <div class="demo" style="color:${p.text.hex}">${p.text.name} on ${p.background.name}</div>
+        ${small}
+        <div class="meta">${p.text.hex} on ${p.background.hex} · ${formatRatio(p.ratio)} · ${level}</div>
+      </div>`;
+    });
+  $("pairs").innerHTML = cards.join("") ||
+    `<p class="hint">No pair reaches 3:1 — these colors can’t be combined for text under WCAG 2.1 AA.</p>`;
+}
+
+/* ---------- tokens JSON export ---------- */
+
+function buildTokens() {
+  const paletteTokens = {};
+  for (const c of currentColors) {
+    paletteTokens[c.name] = { "$type": "color", "$value": c.hex };
+  }
+  const passing = currentPairs.filter(p => p.passesLarge).sort((a, b) => b.ratio - a.ratio);
+  return {
+    "color": paletteTokens,
+    "$extensions": {
+      "org.w3c.wcag.contrast": {
+        "spec": "WCAG 2.1",
+        "levels": ["AA", "AAA"],
+        "thresholds": {
+          "AA":  { "normalText": 4.5, "largeText": 3.0 },
+          "AAA": { "normalText": 7.0, "largeText": 4.5 }
+        },
+        "generatedAt": new Date().toISOString(),
+        "passingPairs": passing.map(p => ({
+          "background": `{color.${p.background.name}}`,
+          "text": `{color.${p.text.name}}`,
+          "backgroundHex": p.background.hex,
+          "textHex": p.text.hex,
+          "ratio": Math.round(p.ratio * 10000) / 10000,
+          "passes": {
+            "AA":  { "normalText": p.passesNormal,    "largeText": p.passesLarge },
+            "AAA": { "normalText": p.passesAAANormal, "largeText": p.passesAAALarge }
+          }
+        }))
+      }
+    }
+  };
+}
+
+function download() {
+  const blob = new Blob([JSON.stringify(buildTokens(), null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "contrast-tokens.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- self-test: known reference values ----------
+   Verifies the implementation against ratios computable by hand
+   from the WCAG 2.1 spec. Logs to console; throws on mismatch. */
+(function selfTest() {
+  const cases = [
+    // [colorA, colorB, expected ratio (4 dp), AA normal pass, AAA normal pass]
+    ["#000000", "#FFFFFF", 21.0,    true,  true],
+    ["#777777", "#FFFFFF", 4.4781,  false, false], // classic near-miss
+    ["#767676", "#FFFFFF", 4.5422,  true,  false],
+    ["#FF0000", "#FFFFFF", 3.9985,  false, false],
+    ["#0000FF", "#FFFFFF", 8.5925,  true,  true]
+  ];
+  for (const [a, b, expected, aa, aaa] of cases) {
+    const r = contrastRatio(parseColorValue(a), parseColorValue(b));
+    if (Math.abs(r - expected) > 0.001) throw new Error(`Self-test failed: ${a}/${b} → ${r}, expected ${expected}`);
+    if ((r >= AA_NORMAL) !== aa)   throw new Error(`Self-test failed: ${a}/${b} AA classification`);
+    if ((r >= AAA_NORMAL) !== aaa) throw new Error(`Self-test failed: ${a}/${b} AAA classification`);
+  }
+  console.info("WCAG contrast self-test passed (5/5 reference pairs, AA + AAA).");
+})();
+
+$("build").addEventListener("click", build);
+$("download").addEventListener("click", download);
+$("passOnly").addEventListener("change", () => { if (currentColors.length) { renderMatrix(currentColors); } });
+$("input").addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") build();
+});
+
+build(); // render the sample palette on load
+</script>
+</body>
+</html>
