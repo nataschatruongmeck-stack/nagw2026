@@ -131,7 +131,11 @@
   .badge.fail  { color: var(--fail); }
   td.same { background: repeating-linear-gradient(45deg, #f2f3f5 0 8px, #e9ebee 8px 16px); }
   td.same .cell { color: var(--ink-soft); font-size: 12px; }
-  td.dim .cell { opacity: .25; }
+  /* Filtered-out cells are hidden from everyone, not just dimmed. At .25 the
+     text sat around 1.7:1 while still being announced at full fidelity by a
+     screen reader — the filter has to apply to sighted users too.
+     visibility (not display) keeps the matrix grid from collapsing. */
+  td.dim .cell { visibility: hidden; }
 
   /* Pairs list */
   .pairs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
@@ -214,6 +218,49 @@
   transition: top .15s ease;
 }
 .nt-skip:focus { top: 8px; }
+
+/* skip-link landing target — shows where focus went, without a permanent ring */
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--nt-stamp);
+  outline-offset: -2px;
+}
+
+/* ---- scope note -------------------------------------------------
+   States what a passing ratio does and does not cover. Both tools emit
+   pass/fail verdicts people may act on, so this sits with the results
+   rather than in a footer. */
+.scope-note {
+  margin: 28px 0 0;
+  padding: 20px 22px;
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-rule);
+  border-left: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  color: var(--nt-ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.scope-note h2 {
+  margin: 0 0 10px;
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--nt-ink);
+}
+.scope-note p { margin: 0 0 10px; max-width: 70ch; }
+.scope-note p:last-child { margin-bottom: 0; }
+.scope-note code {
+  font-family: var(--nt-mono);
+  font-size: 0.9em;
+  background: var(--nt-stamp-wash);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
 
 .nt-chrome {
   position: sticky; top: 0; z-index: 9990;
@@ -339,7 +386,7 @@ body > header { border-bottom: 1px solid var(--line); }
   <p>Paste your palette below. Contrast is computed with the exact WCAG 2.1 relative-luminance formula; pass/fail uses the unrounded ratio. AA requires 4.5:1 for normal text and 3:1 for large text (≥ 24px, or ≥ 18.66px bold); AAA requires 7:1 and 4.5:1.</p>
 </header>
 
-<main id="nt-main">
+<main id="nt-main" tabindex="-1">
   <section class="panel">
     <h2>1 · Colors</h2>
     <p class="hint">One color per line. Optional name before the value, e.g. <code>primary: #0B5CAD</code>. Accepts <code>#RGB</code>, <code>#RRGGBB</code>, <code>rgb(r, g, b)</code>, or comma/space-separated hex codes.</p>
@@ -379,6 +426,14 @@ forest: #0D7A3F</textarea>
     <p class="hint">Every ordered pair that passes AA, rendered as it would appear. “Large text only” cards pass 3:1 but not 4.5:1.</p>
     <div class="pairs-grid" id="pairs"></div>
   </section>
+
+  <aside class="scope-note" aria-labelledby="scope-title">
+    <h2 id="scope-title">What this checks, and what it doesn't</h2>
+    <p>The contrast ratios here implement the WCAG 2.1 relative-luminance formula and are accurate for the colour pairs you enter. That is the whole of the claim.</p>
+    <p>A passing ratio is not page conformance. This calculation assumes flat, fully opaque colour. It does not account for alpha, overlays, gradients, images or video behind text, disabled-state opacity, sub-pixel antialiasing, or <code>forced-colors</code> mode, where the operating system discards your palette entirely. It says nothing about the other WCAG 2.1 AA criteria — heading structure, form labels, focus order, keyboard operability, reflow, or text spacing — and it does not evaluate non-text contrast (SC 1.4.11) unless you enter those colours yourself.</p>
+    <p>WCAG 2.x contrast is also known to model some pairings imperfectly, particularly light-on-dark and mid-tone combinations. It remains the normative standard and the one Title II references; it is not a perceptual ground truth.</p>
+    <p>Verify against rendered pages with real assistive technology before relying on any result.</p>
+  </aside>
 </main>
 
 <script>
@@ -612,7 +667,7 @@ function renderPairs() {
       </div>`;
     });
   $("pairs").innerHTML = cards.join("") ||
-    `<p class="hint">No pair reaches 3:1 — these colors can’t be combined for text under WCAG 2.1 AA.</p>`;
+    `<p class="hint">No pair reaches 3:1 — as flat opaque fills, these colors can’t be combined for text under WCAG 2.1 AA.</p>`;
 }
 
 /* ---------- tokens JSON export ---------- */

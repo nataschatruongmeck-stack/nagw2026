@@ -617,6 +617,49 @@ a { color: var(--stamp); }
 }
 .nt-skip:focus { top: 8px; }
 
+/* skip-link landing target — shows where focus went, without a permanent ring */
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--nt-stamp);
+  outline-offset: -2px;
+}
+
+/* ---- scope note -------------------------------------------------
+   States what a passing ratio does and does not cover. Both tools emit
+   pass/fail verdicts people may act on, so this sits with the results
+   rather than in a footer. */
+.scope-note {
+  margin: 28px 0 0;
+  padding: 20px 22px;
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-rule);
+  border-left: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  color: var(--nt-ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.scope-note h2 {
+  margin: 0 0 10px;
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--nt-ink);
+}
+.scope-note p { margin: 0 0 10px; max-width: 70ch; }
+.scope-note p:last-child { margin-bottom: 0; }
+.scope-note code {
+  font-family: var(--nt-mono);
+  font-size: 0.9em;
+  background: var(--nt-stamp-wash);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 .nt-chrome {
   position: sticky; top: 0; z-index: 9990;
   box-sizing: border-box;
@@ -729,7 +772,7 @@ h2, h3 { font-weight: 600; }
   </div>
 </header>
 
-<main id="nt-main">
+<main id="nt-main" tabindex="-1">
 
   <!-- ============ SIGNATURE: SPECIMEN TRACE ============ -->
   <div class="shell">
@@ -1027,7 +1070,7 @@ commands would return.</pre>
 
     <p class="colophon">
       Colophon — Single file. No build step. No webfonts, no CDN, no external requests of any kind: type is set in Charter / Cambria / Georgia with system sans and mono, which is also how you avoid a third-party font call in a government context.<br>
-      Built to the floor it describes: semantic landmarks, real tables with row and column scope, visible focus, keyboard-scrollable overflow regions, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included.
+      Built toward the floor it describes: semantic landmarks, real tables with row and column scope, visible focus, keyboard-scrollable overflow regions, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included. Self-assessed against WCAG 2.1 AA — not independently audited, and not yet verified with a screen reader.
     </p>
   </div>
 </footer>

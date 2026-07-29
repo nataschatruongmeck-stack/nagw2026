@@ -33,7 +33,8 @@
   --nt-ink-soft:   #46536A;
   --nt-paper:      #E8ECF1;
   --nt-surface:    #FFFFFF;
-  --nt-rule:       #BFC9D6;
+  --nt-rule:       #BFC9D6;   /* decorative separators */
+  --nt-rule-strong: #8794A6;  /* component boundaries — 3.08:1 on white (SC 1.4.11) */
   --nt-rule-soft:  #DCE2EA;
   --nt-stamp:      #134E8B;
   --nt-stamp-wash: #E6EDF6;
@@ -169,8 +170,8 @@ h1 {
   align-items: start;
   gap: 0 26px;
   background: var(--nt-surface);
-  border: 1px solid var(--nt-rule);
-  border-left: 3px solid var(--nt-rule);
+  border: 1px solid var(--nt-rule-strong);
+  border-left: 3px solid var(--nt-rule-strong);
   padding: 26px 22px;
   margin-bottom: 14px;
   text-decoration: none; color: inherit;
@@ -182,6 +183,10 @@ h1 {
   box-shadow: 0 2px 14px rgba(14, 24, 38, 0.09);
 }
 .entry:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 2px; }
+
+/* skip-link landing target — shows where focus went, without a permanent ring */
+.rack:focus { outline: none; }
+.rack:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 6px; }
 
 /* each tool named by the value it works in */
 .readout {
@@ -288,7 +293,7 @@ h1 {
     <h1>Three instruments for design systems.</h1>
     <p class="deck">A design decision should mean the same thing in Figma, in the token file, and on screen. These check that it does — and tell you where it stopped being true.</p>
     <div class="masthead-meta">
-      <span>WCAG 2.1 AA</span>
+      <span>Checks against WCAG 2.1 AA</span>
       <span>No build step</span>
       <span>One file per tool</span>
     </div>
@@ -298,7 +303,7 @@ h1 {
 <main>
   <div class="shell">
 
-    <div class="rack" id="rack">
+    <div class="rack" id="rack" tabindex="-1">
 
       <a class="entry" href="contrast-matrix.html">
         <span class="readout" aria-hidden="true">4.5:1<span class="kind">Ratio</span></span>
@@ -313,7 +318,7 @@ h1 {
         <span class="readout" aria-hidden="true">{ }<span class="kind">Tokens</span></span>
         <span>
           <h2>Token Foundry</h2>
-          <p>Build a design token set with the contrast check built into the editor, then export the JSON. Colour decisions get verified as you make them, not in review.</p>
+          <p>Build a design token set with the contrast check built into the editor, then export the JSON. Colour pairings get checked against WCAG 2.1 AA as you make them, not in review — contrast only; the rest of conformance is still yours.</p>
         </span>
         <span class="arrow" aria-hidden="true">→</span>
       </a>
@@ -329,13 +334,17 @@ h1 {
 
     </div>
 
-    <footer class="colophon">
-      <span>Every page is one file, with two self-hosted fonts — no CDN, no third-party requests.</span>
-      <a href="https://github.com/nataschatruongmeck-stack/nagw2026">Source on GitHub</a>
-    </footer>
-
   </div>
 </main>
+
+<footer class="colophon-wrap">
+  <div class="shell">
+    <div class="colophon">
+      <span>Every page is one file, with two self-hosted fonts — no CDN, no third-party requests.</span>
+      <a href="https://github.com/nataschatruongmeck-stack/nagw2026">Source on GitHub</a>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>

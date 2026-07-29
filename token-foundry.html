@@ -417,6 +417,49 @@
 }
 .nt-skip:focus { top: 8px; }
 
+/* skip-link landing target — shows where focus went, without a permanent ring */
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--nt-stamp);
+  outline-offset: -2px;
+}
+
+/* ---- scope note -------------------------------------------------
+   States what a passing ratio does and does not cover. Both tools emit
+   pass/fail verdicts people may act on, so this sits with the results
+   rather than in a footer. */
+.scope-note {
+  margin: 28px 0 0;
+  padding: 20px 22px;
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-rule);
+  border-left: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  color: var(--nt-ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.scope-note h2 {
+  margin: 0 0 10px;
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--nt-ink);
+}
+.scope-note p { margin: 0 0 10px; max-width: 70ch; }
+.scope-note p:last-child { margin-bottom: 0; }
+.scope-note code {
+  font-family: var(--nt-mono);
+  font-size: 0.9em;
+  background: var(--nt-stamp-wash);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 .nt-chrome {
   position: sticky; top: 0; z-index: 9990;
   box-sizing: border-box;
@@ -568,7 +611,7 @@
   <nav class="rail" id="rail" aria-label="Token categories"></nav>
 
   <!-- Main workspace -->
-  <main class="main" id="main"></main>
+  <main class="main" id="main" tabindex="-1"></main>
 
   <!-- Artifact panel -->
   <aside class="artifact">
@@ -831,6 +874,19 @@ function defaultRow(key){
 /* ============================================================
    Tab renderers
    ============================================================ */
+/* States what the live WCAG verdicts in this editor do and do not cover.
+   Appended on every render because renderMain reassigns main.innerHTML,
+   so static markup inside <main> would not survive. Declared before
+   renderMain so it is never read from the temporal dead zone. */
+const SCOPE_NOTE = `
+  <aside class="scope-note" aria-labelledby="scope-title">
+    <h2 id="scope-title">What this checks, and what it doesn't</h2>
+    <p>The contrast ratios here implement the WCAG 2.1 relative-luminance formula and are accurate for the colour pairs you enter. That is the whole of the claim.</p>
+    <p>A passing ratio is not page conformance. This calculation assumes flat, fully opaque colour. It does not account for alpha, overlays, gradients, images or video behind text, disabled-state opacity, sub-pixel antialiasing, or <code>forced-colors</code> mode, where the operating system discards your palette entirely. It says nothing about the other WCAG 2.1 AA criteria — heading structure, form labels, focus order, keyboard operability, reflow, or text spacing — and it does not evaluate non-text contrast (SC 1.4.11) unless you enter those colours yourself.</p>
+    <p>WCAG 2.x contrast is also known to model some pairings imperfectly, particularly light-on-dark and mid-tone combinations. It remains the normative standard and the one Title II references; it is not a perceptual ground truth.</p>
+    <p>Verify against rendered pages with real assistive technology before relying on any result.</p>
+  </aside>`;
+
 function renderMain(){
   const main = document.getElementById("main");
   CURRENT_OUTFMT = null;
@@ -849,7 +905,7 @@ function renderMain(){
     case "opacity":    CURRENT_OUTFMT=(v)=>String(v); html=scaleTab(state.opacity,{key:"opacity",eyebrow:"effect",title:"Opacity",sub:"Reusable alpha values for disabled, muted and hover states (0–1).",unit:"",valueType:"number",outFmt:(v)=>String(v),singular:"value"}); break;
     case "component":  html=tabComponent(); break;
   }
-  main.innerHTML = html;
+  main.innerHTML = html + SCOPE_NOTE;
   wireMain();
   maybeRenderRestoreBanner();
 }
