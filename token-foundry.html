@@ -352,35 +352,77 @@
   }
 </style>
 <style>
-/* ===== site chrome — Natascha Truong =============================
-   Self-contained: every value hard-set so the bar renders identically
-   on each page regardless of that page's own token set.
-   ================================================================= */
+/* ===== site chrome — Natascha Truong ==============================
+   Palette is the Figma-first workflow guide's, used across all pages.
+   Self-hosted fonts, so still no third-party requests.
+   ================================================================== */
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 400 700;          /* variable: wght, opsz, SOFT, WONK */
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Caprasimo";
+  src: url("fonts/caprasimo-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --nt-nav-h:     54px;
-  --nt-case:      #14181D;
-  --nt-case-lift: #1B2027;
-  --nt-edge:      #2B323B;
-  --nt-etch:      #DCE2E8;
-  --nt-etch-soft: #8B96A3;
-  --nt-brass:     #C89440;
+  --nt-nav-h: 56px;
+
+  /* ---- light ground ---- */
+  --nt-ink:        #0E1826;
+  --nt-ink-soft:   #46536A;
+  --nt-paper:      #E8ECF1;
+  --nt-surface:    #FFFFFF;
+  --nt-rule:       #BFC9D6;
+  --nt-rule-soft:  #DCE2EA;
+  --nt-stamp:      #134E8B;   /* 8.4:1 on white */
+  --nt-stamp-wash: #E6EDF6;
+
+  /* ---- on the dark ground ---- */
+  --nt-on-ink:      #FFFFFF;  /* 17.8:1 */
+  --nt-on-ink-soft: #B9C4D4;  /* 10.1:1 */
+  --nt-on-ink-lift: #8FB4DF;  /*  8.3:1 */
+  --nt-on-ink-rule: #2A3547;
+
+  /* ---- type ---- */
+  /* Fraunces axes: sturdy low-opsz cut, max SOFT, wonky alternates on */
+  --nt-vf: "SOFT" 100, "WONK" 1, "opsz" 20;
+
+  --nt-logo:    "Caprasimo", "Fraunces", Georgia, serif;
+  --nt-display: "Fraunces", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
   --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
+/* Fraunces' warmth comes from SOFT (rounded terminals) and WONK (the
+   swashy alternates). Applied wherever the display face is used. */
+.nt-display {
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+}
+
 .nt-skip {
   position: absolute; left: 8px; top: -60px; z-index: 10000;
-  background: var(--nt-brass); color: #14181D;
+  background: var(--nt-stamp); color: #FFFFFF;
   font: 600 13px/1 var(--nt-sans);
   padding: 10px 14px; border-radius: 4px; text-decoration: none;
   transition: top .15s ease;
 }
 .nt-skip:focus { top: 8px; }
+
 .nt-chrome {
   position: sticky; top: 0; z-index: 9990;
   box-sizing: border-box;
   height: var(--nt-nav-h);   /* border included, so --nt-nav-h is the true total */
-  background: var(--nt-case);
-  border-bottom: 1px solid var(--nt-brass);
+  background: var(--nt-ink);
+  border-bottom: 3px solid var(--nt-stamp);
   font-family: var(--nt-sans);
   line-height: normal;
 }
@@ -390,17 +432,22 @@
   padding: 0 22px;
   max-width: 1200px; margin: 0 auto;
 }
+
+/* the nameplate */
 .nt-mark {
-  font-family: var(--nt-mono);
-  font-size: 12px; font-weight: 600;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--nt-etch); text-decoration: none;
+  font-family: var(--nt-logo);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1;
+  color: var(--nt-on-ink);
+  text-decoration: none;
   white-space: nowrap;
-  padding: 4px 0 3px;
-  border-bottom: 1px solid var(--nt-brass);
   flex: none;
+  padding: 2px 0;
 }
-.nt-mark:hover { color: #fff; }
+.nt-mark:hover { color: var(--nt-on-ink-lift); }
+
 .nt-links {
   list-style: none; margin: 0; padding: 0;
   display: flex; align-items: center; gap: 22px;
@@ -413,30 +460,75 @@
 .nt-links a {
   display: block;
   font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
-  color: var(--nt-etch-soft); text-decoration: none;
+  color: var(--nt-on-ink-soft); text-decoration: none;
   white-space: nowrap;
   padding: 6px 0 5px;
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid transparent;
 }
-.nt-links a:hover { color: var(--nt-etch); }
+.nt-links a:hover { color: var(--nt-on-ink); }
 .nt-links a[aria-current="page"] {
-  color: var(--nt-etch);
-  border-bottom-color: var(--nt-brass);
+  color: var(--nt-on-ink-lift);
+  border-bottom-color: var(--nt-on-ink-lift);
 }
 .nt-chrome a:focus-visible {
-  outline: 2px solid var(--nt-brass);
+  outline: 2px solid var(--nt-on-ink-lift);
   outline-offset: 3px;
   border-radius: 2px;
 }
+
 @media (max-width: 719px) {
-  :root { --nt-nav-h: 88px; }
+  :root { --nt-nav-h: 92px; }
   .nt-nav {
     flex-direction: column; align-items: stretch;
-    justify-content: center; gap: 10px; padding: 0 16px;
+    justify-content: center; gap: 8px; padding: 0 16px;
   }
-  .nt-mark { align-self: flex-start; font-size: 11px; letter-spacing: 0.18em; }
+  .nt-mark { align-self: flex-start; font-size: 19px; }
   .nt-links { gap: 18px; }
 }
+
+/* ---- retheme to the workflow-guide palette --------------------------
+   Same approach: this page's colours all come from its own :root.
+   The Meck sample token values are data and are left untouched. */
+:root {
+  --bg:             #E8ECF1;   /* paper                   */
+  --workspace:      #F4F6F9;
+  --surface:        #FFFFFF;
+  --ink:            #0E1826;
+  --ink-soft:       #46536A;
+  --ink-faint:      #46536A;
+  --line:           #DCE2EA;
+  --line-soft:      #E8ECF1;
+  --control-border: #6B7891;   /* form controls, 4.5:1 on white (SC 1.4.11 needs 3) */
+  --accent:         #134E8B;   /* stamp                   */
+  --accent-deep:    #0E3D6E;
+  --accent-tint:    #E6EDF6;
+  --accent-ink:     #FFFFFF;
+  --rail:           #0E1826;   /* navy rail, was near-black */
+  --rail-ink:       #B9C4D4;   /* 10.1:1 on rail          */
+  --rail-ink-soft:  #8A97AD;   /*  6.0:1 on rail          */
+  --rail-active:    #2A6FBB;   /* 3.5:1 vs rail so the pill is visible;
+                                  white on it is 5.1:1    */
+  --artifact-bg:    #0E1826;   /* dark JSON panel         */
+  --artifact-line:  #2A3547;
+  --pass:           #0B6B4A;
+  --pass-bg:        #E7F1EC;
+  --large:          #8C5A08;
+  --large-bg:       #F6EEDF;
+  --fail:           #A32718;
+  --fail-bg:        #F7E9E6;
+}
+
+/* headlines in the display face */
+.topbar .brand h1,
+.main h2, .main h3, .panel-title {
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.topbar .brand h1 { font-size: 19px; }
+
 /* app shell sits under the chrome */
 .app { height: calc(100vh - var(--nt-nav-h)); }
 </style>
