@@ -916,7 +916,7 @@ function wireScale(key, valueType){
     });
   }
   const add = document.querySelector(`[data-add="${key}"]`);
-  if(add) add.addEventListener("click",()=>{ state[key].push(defaultRow(key)); renderAll(); });
+  if(add) add.addEventListener("click",()=>{ const row=defaultRow(key); row.name=uniqueName(row.name,state[key]); state[key].push(row); renderAll(); });
 }
 let CURRENT_OUTFMT = null;
 
@@ -1057,7 +1057,7 @@ function tabColors(){
     <div class="matrix-wrap" tabindex="0" role="region" aria-label="Contrast matrix, scrollable"><table class="matrix">${matrix}</table></div>
   </div>
 
-  <div class="card"><h3>Semantic · action pairs (buttons)</h3><p class="sub">Background + its legal text color, and a required border where the fill is below 3:1 on white (SC 1.4.11).</p>
+  <div class="card"><h3>Semantic · action pairs (buttons)</h3><p class="sub">Background + its text color. A border is recommended where the fill is below 3:1 on white, so people can see the button's edge. A button with a text label doesn't need one to meet SC 1.4.11.</p>
     <div class="pairs">${actionCards}</div>
     <button class="add-row" data-addaction>+ Add action</button>
   </div>
@@ -1102,7 +1102,7 @@ function actionCard(a,i){
         <div><span class="mini-label">bg</span><select data-ak="bg" data-ai="${i}" aria-label="Action ${esc(a.name)} background">${opts}</select></div>
         <div><span class="mini-label">text</span><select data-ak="text" data-ai="${i}" aria-label="Action ${esc(a.name)} text">${opts}</select></div>
       </div>
-      <div><span class="mini-label">border ${needBorder?"(required — fill < 3:1 on white)":"(optional)"}</span>
+      <div><span class="mini-label">border ${needBorder?"(recommended — fill is under 3:1 on white)":"(optional)"}</span>
         <select data-ak="border" data-ai="${i}" aria-label="Action ${esc(a.name)} border">${noneOpt}${opts}</select></div>
       <div class="verdict" style="background:${vcolor};color:${vink}">text ${fmtRatio(r)} · ${v} &nbsp;·&nbsp; fill vs white ${fmtRatio(fillR)}</div>
     </div>
@@ -1223,7 +1223,7 @@ function wireColors(){
     }));
   }
   const addRaw=document.querySelector("[data-addraw]");
-  if(addRaw) addRaw.addEventListener("click",()=>{ state.raw.push({name:"color-"+(state.raw.length+1),v:"#888888"}); renderAll(); });
+  if(addRaw) addRaw.addEventListener("click",()=>{ state.raw.push({name:uniqueName("new-color",state.raw),v:"#888888"}); renderAll(); });
 
   // action selects/inputs
   document.querySelectorAll("[data-ai]").forEach(el=>{
@@ -1235,9 +1235,9 @@ function wireColors(){
   document.querySelectorAll("[data-ui]").forEach(el=>{
     el.addEventListener("input",()=>{ const i=+el.dataset.ui; state.surface[i][el.dataset.uk]=el.value; renderColorsLive(); announceColorChange(el); });
   });
-  document.querySelector("[data-addaction]")?.addEventListener("click",()=>{ state.action.push({name:"new",bg:rawNames()[0]||"black",text:"white",border:""}); renderAll(); });
-  document.querySelector("[data-addstatus]")?.addEventListener("click",()=>{ state.status.push({name:"new",fg:"black",bg:"white",icon:"info"}); renderAll(); });
-  document.querySelector("[data-addsurface]")?.addEventListener("click",()=>{ state.surface.push({name:"new",bg:"white",text:"black"}); renderAll(); });
+  document.querySelector("[data-addaction]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=rawNames()[0]; state.action.push({name:uniqueName("new",state.action),bg,text:bestContrastName(bg),border:""}); renderAll(); });
+  document.querySelector("[data-addstatus]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.status.push({name:uniqueName("new",state.status),fg:bestContrastName(bg),bg,icon:"info"}); renderAll(); });
+  document.querySelector("[data-addsurface]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.surface.push({name:uniqueName("new",state.surface),bg,text:bestContrastName(bg)}); renderAll(); });
 
   // set select values (selects need value assigned after render)
   syncColorSelects();
@@ -1248,6 +1248,59 @@ function wireColors(){
   if(focus){ setSelectValue(focus,state.focusRing); focus.addEventListener("change",()=>{ state.focusRing=focus.value; updateColorHints(); renderArtifact();
     const r=contrast(rawHex(state.focusRing),"#FFFFFF"); announce(`Focus ring ${state.focusRing}: ${spk(r)} versus white — ${r>=3?"passes non-text contrast":"fails, needs 3 to one"}.`); }); }
   updateColorHints();
+}
+
+/* New rows used to all be named "new". Two of them collide as JSON keys and
+   the export silently keeps only one, so each new row gets a free name. */
+function uniqueName(base, arr){
+  const names=new Set((arr||[]).map(x=>x.name));
+  if(!names.has(base)) return base;
+  let n=2; while(names.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+// The raw color with the most contrast against `against` (a raw name).
+function bestContrastName(against){
+  const bg=rawHex(against); let best="", bestR=0;
+  rawNames().forEach(n=>{ const r=contrast(rawHex(n),bg); if(r>bestR){ bestR=r; best=n; } });
+  return best;
+}
+// The lightest raw color, used as the background for new status/surface pairs.
+function lightestName(){
+  let best="", bestL=-1;
+  state.raw.forEach(c=>{ const h=/^#[0-9a-f]{6}$/i.test(c.v)?c.v:"#000000"; const l=contrast(h,"#000000"); if(l>bestL){ bestL=l; best=c.name; } });
+  return best;
+}
+function needRawColor(){
+  if(state.raw.length) return false;
+  toast("Add a raw color first"); announce("Add a raw color first.");
+  return true;
+}
+
+/* Everything that would make the exported file unusable. Style Dictionary
+   (and any other DTCG tool) rejects each of these. */
+function exportProblems(){
+  const out=[];
+  missingColorRefs().forEach(m=>out.push(`${m.where} points to a missing color (${m.name})`));
+  validateNames().dupNames.forEach(d=>out.push(`duplicate name: ${d}`));
+  for(const [key,arr] of Object.entries(nameCollections())){
+    if(!Array.isArray(arr)) continue;
+    arr.forEach(it=>{ if(/[.{}$]/.test(String(it.name))) out.push(`name with . $ { or }: ${key}.${it.name}`); });
+  }
+  (function walk(o,path){
+    for(const [k,v] of Object.entries(o||{})){
+      if(k.startsWith("$") && k!=="$value") continue;
+      if(v && typeof v==="object" && "$value" in v){
+        const val=v.$value;
+        if(val==null || (typeof val==="number" && !isFinite(val)) || (typeof val==="string" && /NaN|undefined/.test(val)))
+          out.push(`invalid value: ${path}${k}`);
+      } else if(v && typeof v==="object" && !Array.isArray(v)) walk(v, `${path}${k}.`);
+    }
+  })(buildTokens(),"");
+  return out;
+}
+// Buttons whose fill is under 3:1 on white and that have no border.
+function missingRequiredBorders(){
+  return state.action.filter(a=>rawNames().includes(a.bg) && contrast(rawHex(a.bg),"#FFFFFF")<3 && !a.border).map(a=>a.name);
 }
 
 function refreshColorsOutsideGrid(){
@@ -1482,7 +1535,7 @@ function wireTypography(){
     spec.querySelector("[data-tdel]")?.addEventListener("click",()=>{ deleteWithUndo(state.typography[dev], i, `Removed ${dev} ${state.typography[dev][i].name}`); });
   });
   document.querySelectorAll("[data-addtype]").forEach(b=>b.addEventListener("click",()=>{
-    state.typography[b.dataset.addtype].push({name:"new",size:16,lh:24,weight:400}); renderAll();
+    state.typography[b.dataset.addtype].push({name:uniqueName("new",state.typography[b.dataset.addtype]),size:16,lh:24,weight:400}); renderAll();
   }));
 }
 
@@ -1515,8 +1568,8 @@ function wireMotion(){
     });
   });
   document.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",()=>{ const arr=b.dataset.mdel, i=+b.dataset.mi; deleteWithUndo(state[arr], i, `Removed ${arr} ${state[arr][i].name}`); }));
-  document.querySelector('[data-add="duration"]')?.addEventListener("click",()=>{ state.duration.push({name:"new",v:200}); renderAll(); });
-  document.querySelector('[data-add="easing"]')?.addEventListener("click",()=>{ state.easing.push({name:"new",v:"cubic-bezier(0.2, 0, 0, 1)"}); renderAll(); });
+  document.querySelector('[data-add="duration"]')?.addEventListener("click",()=>{ state.duration.push({name:uniqueName("new",state.duration),v:200}); renderAll(); });
+  document.querySelector('[data-add="easing"]')?.addEventListener("click",()=>{ state.easing.push({name:uniqueName("new",state.easing),v:"cubic-bezier(0.2, 0, 0, 1)"}); renderAll(); });
 }
 
 /* ---------- Components ---------- */
@@ -1622,7 +1675,7 @@ function wireComponent(){
     });
   });
   document.querySelectorAll("[data-bdel]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.bdel; deleteWithUndo(state.component.button, i, `Removed button ${state.component.button[i].name}`); }));
-  document.querySelector("[data-addbtn]")?.addEventListener("click",()=>{ state.component.button.push({name:"new",minHeight:44,minWidth:120,padding:16,radius:8,shadow:""}); renderAll(); });
+  document.querySelector("[data-addbtn]")?.addEventListener("click",()=>{ state.component.button.push({name:uniqueName("new",state.component.button),minHeight:44,minWidth:120,padding:16,radius:8,shadow:""}); renderAll(); });
   document.querySelectorAll("[data-cardk]").forEach(el=>el.addEventListener("input",()=>{ state.component.card[el.dataset.cardk]=Number(el.value); refreshComponentPreview(); renderArtifact(); }));
   document.querySelectorAll("[data-inputk]").forEach(el=>el.addEventListener("input",()=>{ state.component.input[el.dataset.inputk]=Number(el.value); refreshComponentPreview(); renderArtifact(); }));
   const cs=document.getElementById("card-shadow");
@@ -1710,7 +1763,7 @@ function buildTokens(){
     if(a.border) tok.border={ "$value":`{color.raw.${a.border}}`, "width":"1px" };
     const ext={ "io.github.nataschatruongmeck-stack.contrast": contrastExt(bgHex,txHex) };
     const fillR=contrast(bgHex,"#FFFFFF");
-    if(fillR<3) ext["io.github.nataschatruongmeck-stack.note"]=`Border required: fill is ${fmtRatio(fillR)} vs white (SC 1.4.11).`;
+    if(fillR<3) ext["io.github.nataschatruongmeck-stack.note"]=`Border recommended: fill is ${fmtRatio(fillR)} vs white. Not required by SC 1.4.11 when the button has a text label.`;
     tok["$extensions"]=ext;
     out.color.action[a.name]=tok;
   });
@@ -1883,15 +1936,15 @@ function applyNameFlags(v){
 function renderNameCheck(v){
   const nc=document.getElementById("nameCheck");
   if(!nc) return;
-  const dn=v.dupNames.length, wn=v.warns.length, miss=missingColorRefs();
-  if(!dn && !wn && !miss.length){ nc.innerHTML=""; nc.style.display="none"; }
+  const dn=v.dupNames.length, wn=v.warns.length, probs=exportProblems(), borders=missingRequiredBorders();
+  if(!probs.length && !wn && !borders.length){ nc.innerHTML=""; nc.style.display="none"; }
   else {
     nc.style.display="block";
     const parts=[];
-    if(miss.length) parts.push(`<span class="nc-err">⚠ ${miss.length} missing color${miss.length>1?"s":""} — export blocked</span>`);
-    if(dn) parts.push(`<span class="nc-err">⚠ ${dn} duplicate name${dn>1?"s":""}</span>`);
+    if(probs.length) parts.push(`<span class="nc-err">⚠ ${probs.length} problem${probs.length>1?"s":""} — export blocked</span>`);
+    if(borders.length) parts.push(`<span class="nc-warn">${borders.length} button${borders.length>1?"s":""} without a recommended border</span>`);
     if(wn) parts.push(`<span class="nc-warn">${wn} non-standard name${wn>1?"s":""}</span>`);
-    const list=[...miss.map(m=>"missing · "+m.where+" → "+m.name), ...v.dupes.map(d=>"duplicate · "+d.key+"."+d.name), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
+    const list=[...probs.map(x=>"blocks export · "+x), ...borders.map(b=>"border recommended · action."+b+" (fill is under 3:1 on white)"), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
       .map(esc).join("<br>");
     nc.innerHTML=`<div>${parts.join(" · ")}</div><details><summary>show details</summary><div class="nc-list">${list}</div></details>`;
   }
@@ -2051,7 +2104,7 @@ function announceColorChange(el){
     const a=state.action[+ai]; const r=contrast(rawHex(a.bg),rawHex(a.text));
     let m=`Action ${a.name}: ${a.text} on ${a.bg}, ${spk(r)}, ${spokenVerdict(r)}.`;
     const fill=contrast(rawHex(a.bg),"#FFFFFF");
-    if(fill<3) m+=` Fill is ${spk(fill)} on white — border required.`;
+    if(fill<3) m+=` Fill is ${spk(fill)} on white — a border is recommended.`;
     announce(m);
   } else if(si!=null){
     const s=state.status[+si]; const r=contrast(rawHex(s.fg),rawHex(s.bg));
@@ -2184,9 +2237,9 @@ function buildInstructions(){
 }
 
 function exportBlocked(){
-  const m=missingColorRefs();
-  if(!m.length) return false;
-  const msg=`Can't export yet: ${m.length} color reference${m.length>1?"s point":" points"} to a missing color. See the warning on the Colors tab.`;
+  const probs=exportProblems();
+  if(!probs.length) return false;
+  const msg=`Can't export yet: ${probs.length} problem${probs.length>1?"s":""} would break the file. See the list next to the JSON.`;
   toast(msg); announce(msg);
   return true;
 }
@@ -2244,13 +2297,30 @@ document.getElementById("importFile").addEventListener("change",(e)=>{
   reader.onload=()=>{
     try{
       const j=JSON.parse(reader.result);
-      IMPORT_SUMMARY=""; importTokens(j); renderAll();
+      IMPORT_SUMMARY=""; importTokens(j); cleanImportedNames(); renderAll();
       toast("Imported "+f.name+IMPORT_SUMMARY);
     }catch(err){ toast("Could not parse that JSON"); }
     e.target.value="";
   };
   reader.readAsText(f);
 });
+/* Names from an imported file may contain . $ { } — typing those is blocked,
+   but a file can still carry them. Replace them with "-", and carry raw color
+   renames through to every reference. */
+function cleanImportedNames(){
+  let n=0;
+  for(const arr of Object.values(nameCollections())){
+    if(!Array.isArray(arr)) continue;
+    arr.forEach(it=>{
+      const clean=String(it.name).replace(/[.{}$]+/g,"-");
+      if(clean!==it.name){
+        const old=it.name; it.name=clean; n++;
+        if(state.raw.includes(it)) renameColorRefs(old, clean);
+      }
+    });
+  }
+  if(n) IMPORT_SUMMARY += ` — ${n} name${n>1?"s":""} changed to remove . $ { or }`;
+}
 /* ---- import helpers ---- */
 let IMPORT_SUMMARY = "";
 function num(x){ const n=Number(x); return isFinite(n)?n:0; }
