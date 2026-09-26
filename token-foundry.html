@@ -288,6 +288,14 @@
   .gate .g .lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: #7b8795; margin-top: 4px; }
   .name-check { display: none; padding: 8px 14px; border-bottom: 1px solid var(--artifact-line); font-size: 11.5px; background: #1c1611; }
   .name-check .nc-err { color: #f0776c; font-weight: 700; }
+  .missing-banner {
+    background: #F7E9E6; border: 1px solid #A32718; border-left: 4px solid #A32718;
+    color: #0E1826; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;
+    font-size: 13.5px; line-height: 1.55;
+  }
+  .missing-banner strong { color: #A32718; }
+  .missing-banner ul { margin: 6px 0 0; padding-left: 1.1rem; }
+  .missing-banner code { font-family: var(--mono); font-size: 12.5px; }
   .name-check .nc-warn { color: #e6b657; font-weight: 700; }
   .name-check details { margin-top: 4px; color: #9aa4b2; }
   .name-check summary { cursor: pointer; color: #7fd6e0; }
@@ -731,35 +739,33 @@ function seedSample(){
   return {
     meta: { name:"Sample tokens", version:"1.0.0", description:"Sample design tokens with WCAG 2.1 contrast ratios recorded.", baseFontSize:16 },
     raw: [
-      {name:"blue-600",v:"#2563EB"},{name:"navy-800",v:"#1E3A8A"},{name:"terra-700",v:"#C2410C"},
-      {name:"teal-700",v:"#0F766E"},{name:"olive-700",v:"#4D7C0F"},{name:"purple-900",v:"#4C1D95"},
-      {name:"ink-900",v:"#111827"},{name:"green-300",v:"#BEF264"},{name:"error-700",v:"#B91C1C"},
-      {name:"success-800",v:"#166534"},{name:"tint-blue",v:"#EFF6FF"},{name:"tint-gray",v:"#F3F4F6"},
-      {name:"tint-lavender",v:"#F5F3FF"},{name:"tint-green",v:"#F0FDF4"},{name:"tint-teal",v:"#F0FDFA"},
-      {name:"tint-peach",v:"#FFF7ED"},{name:"white",v:"#FFFFFF"},{name:"black",v:"#000000"}
+      {name:"white",v:"#FFFFFF"},{name:"black",v:"#000000"},{name:"medium-gray",v:"#888888"},
+      {name:"dark-gray",v:"#333333"},{name:"light-gray",v:"#E6E6E6"},{name:"light-teal",v:"#C5D8DD"},
+      {name:"medium-teal",v:"#4D8898"},{name:"dark-teal",v:"#114755"},{name:"extra-dark-teal",v:"#021D24"},
+      {name:"mustard",v:"#CCA036"},{name:"faded-red",v:"#A24E4E"}
     ],
     action: [
-      {name:"primary",bg:"blue-600",text:"white",border:""},
-      {name:"navy",bg:"navy-800",text:"white",border:""},
-      {name:"terracotta",bg:"terra-700",text:"white",border:""},
-      {name:"teal",bg:"teal-700",text:"white",border:""},
-      {name:"purple",bg:"purple-900",text:"white",border:""},
-      {name:"green",bg:"green-300",text:"black",border:"olive-700"}
+      {name:"primary",bg:"dark-teal",text:"white",border:""},
+      {name:"light",bg:"light-teal",text:"dark-teal",border:""},
+      {name:"mustard",bg:"mustard",text:"black",border:""},
+      {name:"faded-red",bg:"faded-red",text:"white",border:""},
+      {name:"gray-teal",bg:"light-gray",text:"dark-teal",border:""},
+      {name:"white-teal",bg:"white",text:"dark-teal",border:"dark-teal"}
     ],
     status: [
-      {name:"error",fg:"error-700",bg:"tint-peach",icon:"triangle"},
-      {name:"success",fg:"success-800",bg:"tint-green",icon:"check"},
-      {name:"info",fg:"navy-800",bg:"tint-blue",icon:"info"}
+      {name:"error",fg:"white",bg:"faded-red",icon:"triangle"},
+      {name:"success",fg:"dark-teal",bg:"white",icon:"check"},
+      {name:"info",fg:"dark-teal",bg:"light-gray",icon:"info"}
     ],
     surface: [
-      {name:"default",     bg:"white",     text:"ink-900"},
-      {name:"muted",       bg:"tint-gray", text:"ink-900"},
-      {name:"info-subtle", bg:"tint-blue", text:"navy-800"},
-      {name:"brand",       bg:"navy-800",  text:"white"},
-      {name:"brand-teal",  bg:"teal-700",  text:"white"}
+      {name:"default",     bg:"white",      text:"black"},
+      {name:"gray",        bg:"light-gray", text:"black"},
+      {name:"info-subtle", bg:"light-gray", text:"black"},
+      {name:"brand",       bg:"light-teal", text:"extra-dark-teal"},
+      {name:"brand-teal",  bg:"dark-teal",  text:"white"}
     ],
-    link: "blue-600",
-    focusRing: "navy-800",
+    link: "dark-teal",
+    focusRing: "medium-teal",
     typography: {
       family:"Roboto",
       fallback:"sans-serif",
@@ -1040,6 +1046,7 @@ function tabColors(){
   return `<div class="panel-head"><div class="eyebrow">the source of truth</div>
     <h2>Colors</h2><p>Two layers: a <b>raw</b> palette named by scale position, then <b>semantic</b> pairs that alias into it. Every pair below carries its live contrast result into the export. That records contrast only — it is not an accessibility audit.</p></div>
 
+  ${missingBanner()}
   <div class="card"><h3>Raw palette</h3><p class="sub">Reference layer. Components and AI consume the semantic pairs only, never these directly.</p>
     <div class="palette-grid" data-rawgrid>${swatches}</div>
     <button class="add-row" data-addraw>+ Add color</button>
@@ -1194,18 +1201,25 @@ function wireColors(){
     grid.querySelectorAll("input").forEach(inp=>{
       inp.addEventListener("input",()=>{
         const i=+inp.dataset.ci, k=inp.dataset.ck;
+        const oldName=state.raw[i].name;
         state.raw[i][k]=inp.value;
+        if(k==="name") renameColorRefs(oldName, inp.value);
         if(k==="v"){
           // sync sibling text/color inputs live without full rerender
           const sibs=grid.querySelectorAll(`[data-ci="${i}"][data-ck="v"]`);
           sibs.forEach(s=>{ if(s!==inp && /^#[0-9a-f]{6}$/i.test(inp.value)) s.value=inp.value; });
         }
+        // The native color picker stays attached to its <input>. A full
+        // rerender replaces that element mid-drag and the drag stops, so while
+        // the picker is open only the parts outside the palette grid update.
+        if(inp.type==="color"){ refreshColorsOutsideGrid(); return; }
         renderColorsLive();
       });
+      if(inp.type==="color") inp.addEventListener("change",()=>renderColorsLive());
     });
     grid.querySelectorAll("[data-cdel]").forEach(b=>b.addEventListener("click",()=>{
       const i=+b.dataset.cdel; const name=state.raw[i].name; const refs=countColorRefs(name);
-      deleteWithUndo(state.raw, i, `Removed ${name}${refs?` — ${refs} reference${refs>1?"s":""} now default`:""}`);
+      deleteWithUndo(state.raw, i, `Removed ${name}${refs?` — ${refs} token${refs>1?"s use":" uses"} it. Pick a new color for ${refs>1?"them":"it"} before you export`:""}`);
     }));
   }
   const addRaw=document.querySelector("[data-addraw]");
@@ -1229,22 +1243,68 @@ function wireColors(){
   syncColorSelects();
 
   const link=document.getElementById("link-sel"), focus=document.getElementById("focus-sel");
-  if(link){ link.value=state.link; link.addEventListener("change",()=>{ state.link=link.value; updateColorHints(); renderArtifact();
+  if(link){ setSelectValue(link,state.link); link.addEventListener("change",()=>{ state.link=link.value; updateColorHints(); renderArtifact();
     const r=contrast(rawHex(state.link),"#FFFFFF"); announce(`Link color ${state.link}: ${spk(r)} versus white, ${spokenVerdict(r)}.`); }); }
-  if(focus){ focus.value=state.focusRing; focus.addEventListener("change",()=>{ state.focusRing=focus.value; updateColorHints(); renderArtifact();
+  if(focus){ setSelectValue(focus,state.focusRing); focus.addEventListener("change",()=>{ state.focusRing=focus.value; updateColorHints(); renderArtifact();
     const r=contrast(rawHex(state.focusRing),"#FFFFFF"); announce(`Focus ring ${state.focusRing}: ${spk(r)} versus white — ${r>=3?"passes non-text contrast":"fails, needs 3 to one"}.`); }); }
   updateColorHints();
 }
 
+function refreshColorsOutsideGrid(){
+  const t=document.querySelector(".matrix-wrap .matrix"); if(t) t.innerHTML=buildMatrixHTML();
+  const st=document.querySelector(".summary-strip"); if(st) st.innerHTML=matrixStats();
+  renderArtifact();
+}
+
+/* Renaming a raw color renames every reference to it, unless another raw
+   color still carries the old name. */
+function renameColorRefs(oldName, newName){
+  if(!oldName || oldName===newName || state.raw.some(c=>c.name===oldName)) return;
+  const swap=(o,keys)=>keys.forEach(k=>{ if(o[k]===oldName) o[k]=newName; });
+  state.action.forEach(a=>swap(a,["bg","text","border"]));
+  state.status.forEach(s=>swap(s,["fg","bg"]));
+  state.surface.forEach(s=>swap(s,["bg","text"]));
+  if(state.link===oldName) state.link=newName;
+  if(state.focusRing===oldName) state.focusRing=newName;
+}
+
+/* References to raw colors that no longer exist. These would export as
+   {color.raw.<name>} pointing at nothing, and Style Dictionary refuses to
+   build a file like that. */
+function missingColorRefs(){
+  const names=new Set(rawNames()), out=[];
+  const chk=(where,val)=>{ if(val && !names.has(val)) out.push({where,name:val}); };
+  state.action.forEach(a=>{ chk(`action.${a.name}.bg`,a.bg); chk(`action.${a.name}.text`,a.text); chk(`action.${a.name}.border`,a.border); });
+  state.status.forEach(s=>{ chk(`status.${s.name}.fg`,s.fg); chk(`status.${s.name}.bg`,s.bg); });
+  state.surface.forEach(s=>{ chk(`surface.${s.name}.bg`,s.bg); chk(`surface.${s.name}.text`,s.text); });
+  chk("link",state.link); chk("focus ring",state.focusRing);
+  return out;
+}
+function missingBanner(){
+  const m=missingColorRefs();
+  if(!m.length) return "";
+  return `<div class="missing-banner"><strong>⚠ ${m.length} color reference${m.length>1?"s point":" points"} to a color that isn't in your raw palette.</strong>
+    Pick a new color for each one before you export:
+    <ul>${m.map(x=>`<li><code>${esc(x.where)}</code> → <code>${esc(x.name)}</code> (missing)</li>`).join("")}</ul></div>`;
+}
+// A <select> can't show a value it has no option for, so it silently showed
+// its first option instead. Give a missing color its own visible option.
+function setSelectValue(el,val){
+  if(val && ![...el.options].some(o=>o.value===val)){
+    const o=document.createElement("option"); o.value=val; o.textContent=`⚠ ${val} (missing)`; el.appendChild(o);
+  }
+  el.value=val||"";
+}
+
 function syncColorSelects(){
   state.action.forEach((a,i)=>{
-    document.querySelectorAll(`[data-ai="${i}"]`).forEach(el=>{ if(el.dataset.ak && el.tagName==="SELECT") el.value=a[el.dataset.ak]||""; });
+    document.querySelectorAll(`[data-ai="${i}"]`).forEach(el=>{ if(el.dataset.ak && el.tagName==="SELECT") setSelectValue(el,a[el.dataset.ak]); });
   });
   state.status.forEach((s,i)=>{
-    document.querySelectorAll(`[data-si="${i}"]`).forEach(el=>{ if(el.dataset.sk && el.tagName==="SELECT") el.value=s[el.dataset.sk]||""; });
+    document.querySelectorAll(`[data-si="${i}"]`).forEach(el=>{ if(el.dataset.sk && el.tagName==="SELECT") setSelectValue(el,s[el.dataset.sk]); });
   });
   state.surface.forEach((s,i)=>{
-    document.querySelectorAll(`[data-ui="${i}"]`).forEach(el=>{ if(el.dataset.uk && el.tagName==="SELECT") el.value=s[el.dataset.uk]||""; });
+    document.querySelectorAll(`[data-ui="${i}"]`).forEach(el=>{ if(el.dataset.uk && el.tagName==="SELECT") setSelectValue(el,s[el.dataset.uk]); });
   });
 }
 
@@ -1823,14 +1883,15 @@ function applyNameFlags(v){
 function renderNameCheck(v){
   const nc=document.getElementById("nameCheck");
   if(!nc) return;
-  const dn=v.dupNames.length, wn=v.warns.length;
-  if(!dn && !wn){ nc.innerHTML=""; nc.style.display="none"; }
+  const dn=v.dupNames.length, wn=v.warns.length, miss=missingColorRefs();
+  if(!dn && !wn && !miss.length){ nc.innerHTML=""; nc.style.display="none"; }
   else {
     nc.style.display="block";
     const parts=[];
+    if(miss.length) parts.push(`<span class="nc-err">⚠ ${miss.length} missing color${miss.length>1?"s":""} — export blocked</span>`);
     if(dn) parts.push(`<span class="nc-err">⚠ ${dn} duplicate name${dn>1?"s":""}</span>`);
     if(wn) parts.push(`<span class="nc-warn">${wn} non-standard name${wn>1?"s":""}</span>`);
-    const list=[...v.dupes.map(d=>"duplicate · "+d.key+"."+d.name), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
+    const list=[...miss.map(m=>"missing · "+m.where+" → "+m.name), ...v.dupes.map(d=>"duplicate · "+d.key+"."+d.name), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
       .map(esc).join("<br>");
     nc.innerHTML=`<div>${parts.join(" · ")}</div><details><summary>show details</summary><div class="nc-list">${list}</div></details>`;
   }
@@ -2122,7 +2183,15 @@ function buildInstructions(){
   return L.join("\n");
 }
 
+function exportBlocked(){
+  const m=missingColorRefs();
+  if(!m.length) return false;
+  const msg=`Can't export yet: ${m.length} color reference${m.length>1?"s point":" points"} to a missing color. See the warning on the Colors tab.`;
+  toast(msg); announce(msg);
+  return true;
+}
 document.getElementById("downloadBtn").addEventListener("click",()=>{
+  if(exportBlocked()) return;
   const blob=new Blob([JSON.stringify(buildTokens(),null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
@@ -2131,6 +2200,7 @@ document.getElementById("downloadBtn").addEventListener("click",()=>{
   dirty=false; toast("Downloaded "+a.download);
 });
 document.getElementById("copyBtn").addEventListener("click",async()=>{
+  if(exportBlocked()) return;
   try{ await navigator.clipboard.writeText(JSON.stringify(buildTokens(),null,2)); dirty=false; toast("Copied to clipboard"); }
   catch(e){ toast("Copy failed — select the JSON manually"); }
 });
