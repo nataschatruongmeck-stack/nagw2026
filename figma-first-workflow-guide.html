@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Figma-first workflow — design system to shipped code</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="A step-by-step guide to moving a design from Figma through Claude Design and Claude Code without losing the design system.">
+<style>
+/* ============================================================
+   No CDN, no third-party requests. Body type uses system stacks;
+   the two display faces are self-hosted — see colophon.
+   ============================================================ */
+
+:root {
+  /* ---- color ---- */
+  --ink:        #0E1826;
+  --ink-soft:   #46536A;
+  --paper:      #E8ECF1;
+  --surface:    #FFFFFF;
+  --rule:       #BFC9D6;
+  --rule-soft:  #DCE2EA;
+
+  --stamp:      #134E8B;  /* structural accent      8.3:1 on white */
+  --pass:       #0B6B4A;  /* verified               6.5:1 on white */
+  --hold:       #8C5A08;  /* human required         5.6:1 on white */
+  --fail:       #A32718;  /* blocked                7.5:1 on white */
+
+  --pass-wash:  #E7F1EC;
+  --hold-wash:  #F6EEDF;
+  --fail-wash:  #F7E9E6;
+  --stamp-wash: #E6EDF6;
+
+  /* ---- type ---- */
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* ---- space ---- */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4.5rem;
+
+  --measure: 34rem;
+  --wide: 60rem;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- shared shell ---------- */
+
+.shell {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 0 var(--s5);
+}
+
+/* ---------- typography ---------- */
+
+h1, h2, h3, .eyebrow, .tag, .stage-head, .owner {
+  font-family: var(--sans);
+}
+
+h1 {
+  font-size: clamp(2.25rem, 1.6rem + 3.2vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  margin: 0 0 var(--s5);
+  max-width: 14ch;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  margin: 0;
+}
+
+h3 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: 650;
+  margin: 0 0 var(--s2);
+}
+
+p { margin: 0 0 var(--s4); }
+p:last-child { margin-bottom: 0; }
+
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  margin: 0 0 var(--s4);
+}
+
+.deck {
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 38rem;
+}
+
+code, kbd, samp, .mono { font-family: var(--mono); }
+
+code {
+  font-size: 0.875em;
+  background: var(--stamp-wash);
+  color: var(--stamp);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  word-break: break-word;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  background: var(--ink);
+  color: var(--surface);
+  padding: var(--s8) 0 var(--s7);
+  border-bottom: 4px solid var(--stamp);
+}
+
+.masthead .eyebrow { color: #8FB4DF; }
+.masthead .deck { color: #B9C4D4; }
+
+.masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid #2A3547;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: #8894A8;
+}
+
+/* ---------- being an AI skeptic ---------- */
+
+.skeptic {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--stamp);
+  padding: var(--s5);
+  margin: var(--s7) auto 0;
+  max-width: var(--wide);
+}
+
+.skeptic h2 { font-size: 1.125rem; margin-bottom: var(--s2); }
+.skeptic .checklist { margin-top: 0; }
+
+.more-intro { max-width: 42rem; font-size: 0.9375rem; margin-bottom: var(--s5); }
+
+/* ---------- prerequisite stop-block ---------- */
+
+.stop {
+  background: var(--hold-wash);
+  border-left: 4px solid var(--hold);
+  padding: var(--s5);
+  margin: var(--s7) auto var(--s8);
+  max-width: var(--wide);
+}
+
+.stop h2 {
+  font-size: 1.125rem;
+  color: var(--hold);
+  margin-bottom: var(--s2);
+}
+
+.stop p { max-width: 46rem; font-size: 0.9375rem; }
+
+/* ---------- phases ---------- */
+
+.phase { margin-bottom: var(--s8); }
+
+.phase-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s4);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s6);
+  border-bottom: 2px solid var(--ink);
+}
+
+.phase-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--stamp);
+  padding-top: 0.2em;
+}
+
+.phase-note {
+  margin-left: auto;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+/* ---------- steps ---------- */
+
+.step {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: var(--s5);
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.step:last-of-type { border-bottom: 0; }
+
+.step-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: flex-start;
+}
+
+.step-num {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+}
+
+.owner {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.3em 0.5em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.owner-human { background: var(--hold-wash); color: var(--hold); }
+.owner-ai { background: var(--stamp-wash); color: var(--stamp); }   /* blue, not the green 'pass' color: an AI check is not verification */
+
+.step-body { max-width: 42rem; }
+.step-body p { font-size: 0.9375rem; }
+
+.aside {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--rule);
+  padding-left: var(--s4);
+  margin-top: var(--s4);
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: var(--s3) 0 0;
+  font-size: 0.9375rem;
+}
+
+.checklist li {
+  padding: var(--s2) 0 var(--s2) var(--s5);
+  position: relative;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.checklist li:last-child { border-bottom: 0; }
+
+.checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.05em;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1.5px solid var(--rule);
+  background: var(--surface);
+}
+
+/* ---------- fork: the two paths ---------- */
+
+.fork {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--s5);
+}
+
+.path {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--stamp);
+  padding: var(--s5);
+}
+
+.tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  display: block;
+  margin-bottom: var(--s2);
+}
+
+.path-when {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s4);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.path ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.9375rem;
+}
+
+.path li { margin-bottom: var(--s3); }
+.path li:last-child { margin-bottom: 0; }
+
+/* ---------- closing ---------- */
+
+.closing {
+  background: var(--ink);
+  color: #C6D0DE;
+  padding: var(--s8) 0;
+  margin-top: var(--s8);
+}
+
+.closing h2 { color: var(--surface); margin-bottom: var(--s4); }
+.closing p { max-width: 40rem; }
+.closing strong { color: var(--surface); }
+.closing a { color: #8FB4DF; }   /* 8.3:1 on --ink; the default --stamp link color is 2.1:1 here */
+.closing .disclaimer { font-size: 0.9375rem; }
+
+.colophon {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  line-height: 1.8;
+  color: #7A8598;
+  margin-top: var(--s7);
+  padding-top: var(--s4);
+  border-top: 1px solid #2A3547;
+}
+
+/* ---------- focus + motion floor ---------- */
+
+a { color: var(--stamp); }
+
+:focus-visible {
+  outline: 3px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+.masthead :focus-visible,
+.closing :focus-visible { outline-color: #8FB4DF; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 40rem) {
+  .step { grid-template-columns: 1fr; gap: var(--s3); }
+  .step-rail { flex-direction: row; align-items: center; gap: var(--s3); }
+  .phase-head { flex-wrap: wrap; }
+  .phase-note { margin-left: 0; text-align: left; width: 100%; }
+  .masthead { padding-bottom: var(--s6); }
+}
+
+/* ---------- print ---------- */
+
+@media print {
+  body { background: #fff; font-size: 10pt; }
+  .masthead, .closing { background: #fff; color: #000; border-bottom: 2px solid #000; }
+  .masthead .deck, .closing p { color: #000; }
+  .masthead .eyebrow { color: #000; }
+  .phase, .step { break-inside: avoid; }
+}
+</style>
+<style>
+/* ===== site chrome — Natascha Truong ==============================
+   Palette is the Figma-first workflow guide's, used across all pages.
+   Self-hosted fonts, so still no third-party requests.
+   ================================================================== */
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 400 700;          /* variable: wght, opsz, SOFT, WONK */
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Caprasimo";
+  src: url("fonts/caprasimo-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --nt-nav-h: 56px;
+
+  /* ---- light ground ---- */
+  --nt-ink:        #0E1826;
+  --nt-ink-soft:   #46536A;
+  --nt-paper:      #E8ECF1;
+  --nt-surface:    #FFFFFF;
+  --nt-rule:       #BFC9D6;
+  --nt-rule-soft:  #DCE2EA;
+  --nt-stamp:      #134E8B;   /* 8.4:1 on white */
+  --nt-stamp-wash: #E6EDF6;
+
+  /* ---- on the dark ground ---- */
+  --nt-on-ink:      #FFFFFF;  /* 17.8:1 */
+  --nt-on-ink-soft: #B9C4D4;  /* 10.1:1 */
+  --nt-on-ink-lift: #8FB4DF;  /*  8.3:1 */
+  --nt-on-ink-rule: #2A3547;
+
+  /* ---- type ---- */
+  /* Fraunces axes: sturdy low-opsz cut, max SOFT, wonky alternates on */
+  --nt-vf: "SOFT" 100, "WONK" 1, "opsz" 20;
+
+  --nt-logo:    "Caprasimo", "Fraunces", Georgia, serif;
+  --nt-display: "Fraunces", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Fraunces' warmth comes from SOFT (rounded terminals) and WONK (the
+   swashy alternates). Applied wherever the display face is used. */
+.nt-display {
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+}
+
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-stamp); color: #FFFFFF;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+
+/* skip-link landing target — shows where focus went, without a permanent ring */
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--nt-stamp);
+  outline-offset: -2px;
+}
+
+/* ---- scope note -------------------------------------------------
+   States what a passing ratio does and does not cover. Both tools emit
+   pass/fail verdicts people may act on, so this sits with the results
+   rather than in a footer. */
+.scope-note {
+  margin: 28px 0 0;
+  padding: 20px 22px;
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-rule);
+  border-left: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  color: var(--nt-ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.scope-note h2 {
+  margin: 0 0 10px;
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--nt-ink);
+}
+.scope-note p { margin: 0 0 10px; max-width: 70ch; }
+.scope-note p:last-child { margin-bottom: 0; }
+.scope-note code {
+  font-family: var(--nt-mono);
+  font-size: 0.9em;
+  background: var(--nt-stamp-wash);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box;
+  height: var(--nt-nav-h);   /* border included, so --nt-nav-h is the true total */
+  background: var(--nt-ink);
+  border-bottom: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  line-height: normal;
+}
+.nt-nav {
+  height: 100%;
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 22px;
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* the nameplate */
+.nt-mark {
+  font-family: var(--nt-logo);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1;
+  color: var(--nt-on-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  flex: none;
+  padding: 2px 0;
+}
+.nt-mark:hover { color: var(--nt-on-ink-lift); }
+
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links li { margin: 0; padding: 0; }
+.nt-links li::before { content: none; }
+.nt-links a {
+  display: block;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-on-ink-soft); text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 0 5px;
+  border-bottom: 2px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-on-ink); }
+.nt-links a[aria-current="page"] {
+  color: var(--nt-on-ink-lift);
+  border-bottom-color: var(--nt-on-ink-lift);
+}
+.nt-chrome a:focus-visible {
+  outline: 2px solid var(--nt-on-ink-lift);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 92px; }
+  .nt-nav {
+    flex-direction: column; align-items: stretch;
+    justify-content: center; gap: 8px; padding: 0 16px;
+  }
+  .nt-mark { align-self: flex-start; font-size: 19px; }
+  .nt-links { gap: 18px; }
+}
+
+/* ---- this page already defines the shared palette -------------------
+   Only the display face changes; Charter stays for body text. */
+h1, h2, h3 {
+  font-family: var(--nt-display);
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+  letter-spacing: -0.015em;
+}
+h1 { font-weight: 600; }
+h2, h3 { font-weight: 600; }
+
+/* the masthead's own 4px stamp rule would stack with the chrome's 3px
+   one; the masthead keeps it, the chrome drops to a hairline here */
+.nt-chrome { border-bottom-width: 1px; }
+
+/* Reflow fix (SC 1.4.10). Grid items default to min-width:auto, so they
+   refuse to shrink below their min-content width — one .step was rendering
+   494px wide inside a 452px track, pushing the whole page into horizontal
+   scroll at narrow widths. Measured: 518px scroll width in a 500px viewport
+   before, exactly 500px after. */
+.step-rail, .step-body { min-width: 0; }
+
+/* Narrow screens: let the nav links wrap onto a second line instead of
+   scrolling sideways, so no link sits hidden off-screen. */
+@media (max-width: 719px) {
+  .nt-chrome { height: auto; position: static; }   /* a two-line bar shouldn't pin to the top of a phone screen */
+  .nt-nav { padding: 10px 16px; }
+  .nt-links { flex-wrap: wrap; overflow: visible; gap: 4px 18px; }
+  .nt-links li { margin: 0; line-height: normal; }
+}
+</style>
+</head>
+<body>
+<div class="nt-chrome">
+  <a class="nt-skip" href="#nt-main">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="design-tokens.html">Design Tokens</a></li>
+      <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html" aria-current="page">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">Figma-first workflow</p>
+    <h1>A Skeptic's Guide</h1>
+    <p class="deck">Your final design must conform to your design token system. The steps below show a Figma to AI workflow that maintains your design governance and human oversight.</p>
+    <div class="masthead-meta">
+      <span>Figma → Claude Design → Claude Code / Figma → Claude Code</span>
+      <span>WCAG 2.1 AA</span>
+      <span>Read time ~6 min</span>
+    </div>
+  </div>
+</header>
+
+<main id="nt-main" tabindex="-1">
+
+  <!-- ============ BEING AN AI SKEPTIC ============ -->
+  <div class="shell">
+    <section class="skeptic" aria-labelledby="skeptic-title">
+      <h2 id="skeptic-title">Being an AI skeptic</h2>
+      <ul class="checklist">
+        <li>Research and learn about the limitations of AI.</li>
+        <li>Think about what you feel comfortable with, professionally and personally.</li>
+        <li>Follow your organization's AI governance.</li>
+        <li>Be the director of your AI tool.</li>
+        <li>Always test and check what AI creates.</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ============ PREREQ ============ -->
+  <div class="shell">
+    <section class="stop" aria-labelledby="prereq-title">
+      <h2 id="prereq-title">Note:</h2>
+      <p>This guide assumes your tokens are already in Figma as Variables, imported <em>from</em> <code>tokens.json</code> rather than recreated by hand. At the time of writing that usually means a plugin that reads the Design Tokens (DTCG) JSON format; Figma has announced native import, but check whether it is available on your plan. You can also load them with Claude Code if you have MCP configured in Figma. If your Figma styles were built by hand instead of using your design token file, your standards can drift.</p>
+    </section>
+  </div>
+
+  <!-- ============ STEP 1 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p1">
+      <div class="phase-head">
+        <span class="phase-num">Step 1</span>
+        <h2 id="p1">Design in Figma</h2>
+        <span class="phase-note">You are the art director</span>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">01</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Sync the Variables before you start</h3>
+          <p>Re-import from <code>tokens.json</code> at the beginning of the design session, not the end.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">02</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Use your variables when designing. Do not type in values.</h3>
+          <p>Fills, strokes, corner radii, gaps, text styles: use your variables (or design tokens) for all of these values.</p>
+          <p class="aside">If a design needs a value that has no token, make a note of it. Add it to <code>tokens.json</code> and re-sync. Do not add a value by hand.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">03</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Use Auto Layout</h3>
+          <p>Auto Layout is the most reliable way for the file to record <em>intent</em> — direction, spacing, alignment, and how things resize. It also keeps all of your spacing consistent throughout your design.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">04</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Make sure your design specs document everything beyond what you design in Figma.</h3>
+          <p>Values such as state colors and breakpoints belong in your JSON design token file. Behavior such as focus order and screen reader announcements belongs in your written specs. Some examples are: (This list may not be inclusive of everything you need to define)</p>
+          <ul class="checklist">
+            <li>Every interactive state — hover, focus, active, disabled, error, loading, empty</li>
+            <li>Focus order and keyboard behavior</li>
+            <li>What a screen reader should announce, and when</li>
+            <li>Breakpoint behavior — what reflows, what stacks, what is removed</li>
+            <li>Which text is real content and which is placeholder</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">05</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Audit your design</h3>
+          <p>Some examples include: checking contrast on every text-and-background pairing. And checking touch targets: 44&nbsp;×&nbsp;44&nbsp;px is a common best-practice target.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ STEP 2 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p2">
+      <div class="phase-head">
+        <span class="phase-num">Step 2</span>
+        <h2 id="p2">Pick a workflow</h2>
+        <span class="phase-note">What to ask to decide: Is your design final or close to final?</span>
+      </div>
+
+      <div class="fork">
+
+        <article class="path">
+          <span class="tag">Workflow 1</span>
+          <h3>Figma → Claude Code</h3>
+          <p class="path-when">Use this workflow when your design is final or close to final.</p>
+          <ol>
+            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
+            <li><strong>Point Claude Code to your Design Tokens JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
+        <article class="path">
+          <span class="tag">Workflow 2</span>
+          <h3>Figma → Claude Design → Claude Code</h3>
+          <p class="path-when">Use this workflow when you have a starting point but you want to iterate on your design quickly.</p>
+          <ol>
+            <li><strong>In Figma, export the design frame as a PNG, and the variable list as text. You can also ask Claude Design to save the standards from your JSON file, so new designs follow them (Claude Design calls these saved standards a &ldquo;design system&rdquo;).</strong></li>
+            <li><strong>Explore design options using Claude Design.</strong></li>
+            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
+            <li><strong>Point Claude Code to your handoff file, your Figma file or a PNG of your Figma file, and your Design token JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ STEP 3 ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p3">
+      <div class="phase-head">
+        <span class="phase-num">Step 3</span>
+        <h2 id="p3">Gates</h2>
+        <span class="phase-note">Identical for both workflows</span>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">06</span>
+          <span class="owner owner-ai">AI-assisted</span>
+        </div>
+        <div class="step-body">
+          <h3>Ask Claude Code to check your work</h3>
+          <p>Ask Claude Code to compare the code against your JSON design token file and list any colors, spacing, or type values that don't match a token.</p>
+          <p class="aside">Treat the answer as a first pass, not proof. Claude Code can miss values or describe checks it didn't fully run, so confirm its findings yourself in step 07.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">07</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Check your work yourself</h3>
+          <p>These four checks cover some of what automated tools miss, such as focus visibility, screen reader announcements, and reflow. They are a starting point, not a full audit:</p>
+          <ul class="checklist">
+            <li>Tab through the design to verify the tab order is correct.</li>
+            <li>Test your design on a screen reader if possible.</li>
+            <li>Test your design in a mobile-sized browser.</li>
+            <li>Zoom into your design to 200% and check to see if anything breaks.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">08</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Check the final design against your design file.</h3>
+          <p>Does it meet the need you were originally intending?</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ MORE WORKFLOWS ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="more">
+      <div class="phase-head">
+        <span class="phase-num">More</span>
+        <h2 id="more">More workflows</h2>
+        <span class="phase-note">These start outside of Figma</span>
+      </div>
+
+      <p class="more-intro">These two workflows don't start with a final Figma design. Use the checks in Step 3 for these too.</p>
+
+      <div class="fork">
+
+        <article class="path">
+          <span class="tag">Workflow 3</span>
+          <h3>Claude Design → Claude Code</h3>
+          <p class="path-when">Use this workflow when you don't have Figma or a Figma Pro account, or when you want to explore ideas first and then edit.</p>
+          <ol>
+            <li><strong>Ask Claude Design to save the standards from your JSON file, so new designs follow them.</strong></li>
+            <li><strong>Explore design options using Claude Design.</strong></li>
+            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
+            <li><strong>Point Claude Code to your handoff file and your Design token JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
+        <article class="path">
+          <span class="tag">Workflow 4</span>
+          <h3>Claude Code → Figma</h3>
+          <p class="path-when">Use this workflow when you have a design you already built in Claude Code and you want new design options in a similar style.</p>
+          <ol>
+            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
+            <li><strong>Ask Claude Code to recreate your existing design in Figma.</strong></li>
+            <li><strong>Check that the Figma layers use your variables, not typed-in values.</strong></li>
+            <li><strong>Explore new design options in Figma.</strong></li>
+            <li><strong>When your new design is final or close to final, continue with Workflow 1.</strong></li>
+          </ol>
+          <p class="aside">Check Figma's documentation for which plans and seats can use the Figma MCP server.</p>
+        </article>
+
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<footer class="closing">
+  <div class="shell">
+    <p class="disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Claude and Figma are named because they are the tools I demonstrate, not as an endorsement or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+
+    <p class="colophon">
+      © 2026 Natascha Truong. All rights reserved.<br>
+      Colophon — Single file. No build step. No CDN and no third-party requests on this page: body type is set in Charter / Cambria / Georgia with system sans and mono, and the two display faces are served from this site, which is how you avoid a third-party font call in a government context.<br>
+      Built toward the floor it describes: semantic landmarks, visible focus, reduced-motion respected, legible at 320&nbsp;px and at 200% zoom. Print stylesheet included. Self-assessed against WCAG 2.1 AA on 26 September 2026 with scripted checks in Chrome for focus visibility, reflow at 320&nbsp;px, 200% zoom layout, and the rendered contrast of every text element. Not independently audited, and not yet verified with a screen reader. Full detail on the <a href="accessibility.html">accessibility page</a>.
+    </p>
+  </div>
+</footer>
+
+
+</body>
+</html>

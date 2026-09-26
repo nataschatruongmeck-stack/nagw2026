@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Natascha Truong — tools for design systems</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Companion site for The Skeptic's Guide to AI-Assisted Web Design (NAGW 2026): design token basics, a WCAG contrast matrix, a design token builder, and a Figma-first workflow guide.">
+<style>
+/* ============================================================
+   Palette and structure follow the Figma-first workflow guide.
+   Fonts are self-hosted — no third-party requests.
+   ============================================================ */
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Caprasimo";
+  src: url("fonts/caprasimo-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --nt-nav-h: 56px;
+
+  --nt-ink:        #0E1826;
+  --nt-ink-soft:   #46536A;
+  --nt-paper:      #E8ECF1;
+  --nt-surface:    #FFFFFF;
+  --nt-rule:       #BFC9D6;   /* decorative separators */
+  --nt-rule-strong: #8794A6;  /* component boundaries — 3.08:1 on white (SC 1.4.11) */
+  --nt-rule-soft:  #DCE2EA;
+  --nt-stamp:      #134E8B;
+  --nt-stamp-wash: #E6EDF6;
+
+  --nt-on-ink:      #FFFFFF;
+  --nt-on-ink-soft: #B9C4D4;
+  --nt-on-ink-lift: #8FB4DF;
+  --nt-on-ink-rule: #2A3547;
+
+  /* Fraunces axes: sturdy low-opsz cut, max SOFT, wonky alternates on */
+  --nt-vf: "SOFT" 100, "WONK" 1, "opsz" 20;
+
+  --nt-logo:    "Caprasimo", "Fraunces", Georgia, serif;
+  --nt-display: "Fraunces", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.nt-display, h1, .entry h2 {
+  font-optical-sizing: none;
+  font-variation-settings: var(--nt-vf);
+}
+
+/* ---------- site chrome ---------- */
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-stamp); color: #FFFFFF;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box;
+  height: var(--nt-nav-h);
+  background: var(--nt-ink);
+  border-bottom: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans);
+  line-height: normal;
+}
+.nt-nav {
+  height: 100%;
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 22px;
+  max-width: 1200px; margin: 0 auto;
+}
+.nt-mark {
+  font-family: var(--nt-logo);
+  font-size: 21px; font-weight: 400;
+  letter-spacing: 0.005em; line-height: 1;
+  color: var(--nt-on-ink); text-decoration: none;
+  white-space: nowrap; flex: none; padding: 2px 0;
+}
+.nt-mark:hover { color: var(--nt-on-ink-lift); }
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto; scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links a {
+  display: block;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-on-ink-soft); text-decoration: none;
+  white-space: nowrap; padding: 6px 0 5px;
+  border-bottom: 2px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-on-ink); }
+.nt-links a[aria-current="page"] {
+  color: var(--nt-on-ink-lift); border-bottom-color: var(--nt-on-ink-lift);
+}
+.nt-chrome a:focus-visible {
+  outline: 2px solid var(--nt-on-ink-lift); outline-offset: 3px; border-radius: 2px;
+}
+
+/* ---------- page ---------- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--nt-paper);
+  color: var(--nt-ink);
+  font-family: var(--nt-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.shell { max-width: 60rem; margin: 0 auto; padding: 0 22px; }
+
+/* ---------- masthead ---------- */
+.masthead {
+  background: var(--nt-ink);
+  color: var(--nt-on-ink);
+  border-bottom: 4px solid var(--nt-stamp);
+  padding: clamp(48px, 9vw, 88px) 0 clamp(36px, 6vw, 60px);
+}
+.eyebrow {
+  margin: 0 0 20px;
+  font-family: var(--nt-mono);
+  font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--nt-on-ink-lift);
+}
+h1 {
+  margin: 0 0 22px;
+  font-family: var(--nt-display);
+  font-size: clamp(2.25rem, 1.6rem + 3.2vw, 3.75rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  max-width: 17ch;
+}
+.deck {
+  margin: 0;
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  line-height: 1.62;
+  color: var(--nt-on-ink-soft);
+  max-width: 34rem;
+}
+.masthead-meta {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+  margin-top: 2rem; padding-top: 1rem;
+  border-top: 1px solid var(--nt-on-ink-rule);
+  font-family: var(--nt-mono);
+  font-size: 0.75rem; color: var(--nt-on-ink-soft);
+}
+
+/* ---------- the three entries ---------- */
+.rack { padding: clamp(36px, 6vw, 60px) 0 clamp(40px, 7vw, 72px); }
+
+.entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 0 26px;
+  background: var(--nt-surface);
+  border: 1px solid var(--nt-rule-strong);
+  border-left: 3px solid var(--nt-rule-strong);
+  padding: 26px 22px;
+  margin-bottom: 14px;
+  text-decoration: none; color: inherit;
+  transition: border-left-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.entry:last-child { margin-bottom: 0; }
+.entry:hover, .entry:focus-visible {
+  border-left-color: var(--nt-stamp);
+  box-shadow: 0 2px 14px rgba(14, 24, 38, 0.09);
+}
+.entry:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 2px; }
+
+/* skip-link landing target — shows where focus went, without a permanent ring */
+.rack:focus { outline: none; }
+.rack:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 6px; }
+
+/* each tool named by the value it works in */
+.readout {
+  font-family: var(--nt-mono);
+  font-size: clamp(19px, 2.4vw, 23px);
+  font-weight: 500; letter-spacing: -0.01em;
+  color: var(--nt-stamp);
+  padding-top: 2px;
+}
+.kind {
+  display: block; margin-top: 8px;
+  font-family: var(--nt-mono);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--nt-ink-soft);
+}
+
+.entry h2 {
+  margin: 0 0 8px;
+  font-family: var(--nt-display);
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 600; line-height: 1.2; letter-spacing: -0.015em;
+}
+.entry p {
+  margin: 0;
+  font-size: 15px; line-height: 1.58;
+  color: var(--nt-ink-soft);
+  max-width: 46rem;
+}
+.arrow {
+  font-family: var(--nt-mono);
+  font-size: 17px; color: var(--nt-stamp);
+  justify-self: end; align-self: center;
+  transition: transform .2s cubic-bezier(.2,.7,.3,1);
+}
+.entry:hover .arrow, .entry:focus-visible .arrow { transform: translateX(5px); }
+
+.deck.talk { margin-top: 12px; color: var(--nt-on-ink); }
+.deck.talk cite { font-style: italic; }
+
+/* ---------- resources ---------- */
+.resources { padding: 0 0 clamp(40px, 7vw, 72px); }
+.resources h2 {
+  margin: 0 0 6px; font-family: var(--nt-display);
+  font-optical-sizing: none; font-variation-settings: var(--nt-vf);
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem); font-weight: 600; letter-spacing: -0.015em;
+}
+.resources-note { margin: 0 0 18px; font-size: 14px; color: var(--nt-ink-soft); }
+.resource-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 18px 28px; }
+.resources h3 {
+  margin: 0 0 8px; font-family: var(--nt-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--nt-ink-soft);
+}
+.resources ul { list-style: none; margin: 0; padding: 0; }
+.resources li { margin-bottom: 8px; font-size: 15px; line-height: 1.45; }
+.resources a { color: var(--nt-stamp); text-underline-offset: 3px; }
+.resources a:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- disclaimer (mirrors the talk's disclaimer slide) ---------- */
+.site-disclaimer {
+  margin: 0; padding: 22px 0 0; max-width: 46rem;
+  font-family: var(--nt-sans); font-size: 0.875rem; line-height: 1.6;
+  color: var(--nt-ink-soft);
+}
+.site-disclaimer strong { color: var(--nt-ink); }
+
+/* ---------- colophon ---------- */
+.colophon {
+  border-top: 1px solid var(--nt-rule);
+  padding: 22px 0 44px;
+  display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline;
+  font-family: var(--nt-mono);
+  font-size: 0.75rem; color: var(--nt-ink-soft);
+}
+.colophon a { color: var(--nt-stamp); text-decoration: underline; text-underline-offset: 3px; }
+.colophon a:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 3px; }
+
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 92px; }
+  .nt-nav {
+    flex-direction: column; align-items: stretch;
+    justify-content: center; gap: 8px; padding: 0 16px;
+  }
+  .nt-mark { align-self: flex-start; font-size: 19px; }
+  .nt-links { gap: 18px; }
+}
+@media (max-width: 640px) {
+  .entry {
+    grid-template-columns: minmax(0, 1fr) 28px;
+    gap: 0 16px; padding: 22px 18px;
+  }
+  .readout { grid-column: 1 / -1; margin-bottom: 14px; }
+  .kind { display: inline; margin-top: 0; margin-left: 12px; }
+}
+
+/* ---------- load sequence ---------- */
+@keyframes ntRise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+.masthead > .shell > * { animation: ntRise .55s cubic-bezier(.2,.7,.3,1) backwards; }
+.masthead > .shell > :nth-child(1) { animation-delay: .04s; }
+.masthead > .shell > :nth-child(2) { animation-delay: .12s; }
+.masthead > .shell > :nth-child(3) { animation-delay: .2s; }
+.masthead > .shell > :nth-child(4) { animation-delay: .28s; }
+.masthead > .shell > :nth-child(5) { animation-delay: .36s; }
+.entry { animation: ntRise .5s cubic-bezier(.2,.7,.3,1) backwards; animation-delay: var(--d); }
+.entry:nth-of-type(1) { --d: .34s; }
+.entry:nth-of-type(2) { --d: .42s; }
+.entry:nth-of-type(3) { --d: .5s; }
+.entry:nth-of-type(4) { --d: .58s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* Narrow screens: let the nav links wrap onto a second line instead of
+   scrolling sideways, so no link sits hidden off-screen. */
+@media (max-width: 719px) {
+  .nt-chrome { height: auto; position: static; }   /* a two-line bar shouldn't pin to the top of a phone screen */
+  .nt-nav { padding: 10px 16px; }
+  .nt-links { flex-wrap: wrap; overflow: visible; gap: 4px 18px; }
+  .nt-links li { margin: 0; line-height: normal; }
+}
+</style>
+</head>
+<body>
+
+<div class="nt-chrome">
+  <a class="nt-skip" href="#rack">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html" aria-current="page">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="design-tokens.html">Design Tokens</a></li>
+      <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">NAGW 2026 · Companion site</p>
+    <h1>Three tools for design systems.</h1>
+    <p class="deck">Use these tools to check color contrast, create a design token system, and follow a human-directed AI-assisted design workflow.</p>
+    <p class="deck talk">Companion site for <cite>The Skeptic's Guide to AI-Assisted Web Design</cite>, presented by Natascha Truong at NAGW 2026.</p>
+    <div class="masthead-meta">
+      <span>Contrast checks · WCAG 2.1</span>
+      <span>No build step</span>
+      <span>One file per tool</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="shell">
+
+    <div class="rack" id="rack" tabindex="-1">
+
+      <a class="entry" href="design-tokens.html">
+        <span class="readout" aria-hidden="true">#000<span class="kind">Start here</span></span>
+        <span>
+          <h2>Design Tokens</h2>
+          <p>What a design token is, what a token file looks like, and how to use it with Figma, code, and AI tools.</p>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="entry" href="contrast-matrix.html">
+        <span class="readout" aria-hidden="true">4.5:1<span class="kind">Ratio</span></span>
+        <span>
+          <h2>Contrast Matrix</h2>
+          <p>Contrast is computed with the WCAG 2.1 relative-luminance formula and judged on the unrounded ratio, against both AA and AAA thresholds.</p>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="entry" href="token-foundry.html">
+        <span class="readout" aria-hidden="true">{ }<span class="kind">Tokens</span></span>
+        <span>
+          <h2>Token Foundry</h2>
+          <p>Build a design token set with the contrast check built into the editor, then export the JSON. Ensure the values you are adding are correct and align with WCAG 2.1 AA standards before creating an export file.</p>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="entry" href="figma-first-workflow-guide.html">
+        <span class="readout" aria-hidden="true">1:1<span class="kind">Guide</span></span>
+        <span>
+          <h2>Figma-first Workflow</h2>
+          <p>Overall steps to go from Figma to final code, with four options for workflow.</p>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+
+    </div>
+
+    <section class="resources" id="resources" aria-labelledby="resources-title">
+      <h2 id="resources-title">Resources</h2>
+      <p class="resources-note">These links go to other sites. Their content can change.</p>
+      <div class="resource-groups">
+        <div>
+          <h3>Design tokens</h3>
+          <ul>
+            <li><a href="https://www.designtokens.org/">Design Tokens Community Group</a></li>
+            <li><a href="https://www.designtokens.org/tr/2025.10/format/">Design Tokens Format Module (2025.10)</a></li>
+            <li><a href="https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma">Figma: Guide to variables</a></li>
+            <li><a href="https://styledictionary.com/">Style Dictionary</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Accessibility</h3>
+          <ul>
+            <li><a href="https://www.w3.org/TR/WCAG21/">WCAG 2.1</a></li>
+            <li><a href="https://www.w3.org/WAI/WCAG21/quickref/">How to Meet WCAG (Quick Reference)</a></li>
+            <li><a href="https://www.ada.gov/resources/2024-03-08-web-rule/">ADA.gov: Title II web accessibility rule</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>AI and design tools</h3>
+          <ul>
+            <li><a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">Get started with Claude Design</a></li>
+            <li><a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Set up your design system in Claude Design</a></li>
+            <li><a href="https://code.claude.com/docs/en/overview">Claude Code documentation</a></li>
+            <li><a href="https://developers.figma.com/docs/figma-mcp-server/">Figma MCP server documentation</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="colophon-wrap">
+  <div class="shell">
+    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+    <div class="colophon">
+      <span>© 2026 Natascha Truong. All rights reserved.</span>
+      <span>Every page is one file, with two self-hosted fonts — no CDN, and no third-party requests unless you choose a Google Font to preview in Token Foundry.</span>
+      <a href="accessibility.html">Accessibility</a>
+      <a href="https://github.com/nataschatruongmeck-stack/nagw2026">Source on GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

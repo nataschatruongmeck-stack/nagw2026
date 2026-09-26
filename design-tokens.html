@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Tokens — Natascha Truong</title>
+<meta name="description" content="What a design token is, what a token file looks like, and how to use one to keep Figma, code, and AI tools aligned.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin-var.woff2") format("woff2");
+  font-weight: 400 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Caprasimo";
+  src: url("fonts/caprasimo-latin.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+:root {
+  --nt-nav-h: 56px;
+  --nt-ink:        #0E1826;
+  --nt-ink-soft:   #46536A;
+  --nt-paper:      #E8ECF1;
+  --nt-surface:    #FFFFFF;
+  --nt-rule:       #BFC9D6;
+  --nt-rule-strong: #8794A6;
+  --nt-stamp:      #134E8B;
+  --nt-stamp-wash: #E6EDF6;
+  --nt-hold:       #8C5A08;
+  --nt-hold-wash:  #F6EEDF;
+  --nt-on-ink:      #FFFFFF;
+  --nt-on-ink-soft: #B9C4D4;
+  --nt-on-ink-lift: #8FB4DF;
+  --nt-on-ink-rule: #2A3547;
+  --nt-vf: "SOFT" 100, "WONK" 1, "opsz" 20;
+  --nt-logo:    "Caprasimo", "Fraunces", Georgia, serif;
+  --nt-display: "Fraunces", Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --nt-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --nt-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--nt-paper); color: var(--nt-ink);
+  font-family: var(--nt-sans); -webkit-font-smoothing: antialiased;
+}
+.shell { max-width: 44rem; margin: 0 auto; padding: 0 22px; }
+
+/* ---- chrome ---- */
+.nt-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 10000;
+  background: var(--nt-stamp); color: #FFFFFF;
+  font: 600 13px/1 var(--nt-sans);
+  padding: 10px 14px; border-radius: 4px; text-decoration: none;
+  transition: top .15s ease;
+}
+.nt-skip:focus { top: 8px; }
+main[tabindex="-1"]:focus { outline: none; }
+main[tabindex="-1"]:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: -2px; }
+
+.nt-chrome {
+  position: sticky; top: 0; z-index: 9990;
+  box-sizing: border-box; height: var(--nt-nav-h);
+  background: var(--nt-ink); border-bottom: 3px solid var(--nt-stamp);
+  font-family: var(--nt-sans); line-height: normal;
+}
+.nt-nav {
+  height: 100%; display: flex; align-items: center; gap: 28px;
+  padding: 0 22px; max-width: 1200px; margin: 0 auto;
+}
+.nt-mark {
+  font-family: var(--nt-logo); font-size: 21px; font-weight: 400;
+  letter-spacing: 0.005em; line-height: 1; color: var(--nt-on-ink);
+  text-decoration: none; white-space: nowrap; flex: none; padding: 2px 0;
+}
+.nt-mark:hover { color: var(--nt-on-ink-lift); }
+.nt-links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; align-items: center; gap: 22px;
+  min-width: 0; overflow-x: auto; scrollbar-width: none;
+}
+.nt-links::-webkit-scrollbar { display: none; }
+.nt-links a {
+  display: block; font-size: 13.5px; font-weight: 500; letter-spacing: 0.01em;
+  color: var(--nt-on-ink-soft); text-decoration: none; white-space: nowrap;
+  padding: 6px 0 5px; border-bottom: 2px solid transparent;
+}
+.nt-links a:hover { color: var(--nt-on-ink); }
+.nt-links a[aria-current="page"] { color: var(--nt-on-ink-lift); border-bottom-color: var(--nt-on-ink-lift); }
+.nt-chrome a:focus-visible { outline: 2px solid var(--nt-on-ink-lift); outline-offset: 3px; border-radius: 2px; }
+
+/* ---- page ---- */
+.masthead {
+  background: var(--nt-ink); color: var(--nt-on-ink);
+  border-bottom: 4px solid var(--nt-stamp);
+  padding: clamp(40px, 7vw, 64px) 0 clamp(28px, 5vw, 44px);
+}
+.eyebrow {
+  margin: 0 0 16px; font-family: var(--nt-mono);
+  font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--nt-on-ink-lift);
+}
+h1 {
+  margin: 0 0 16px; font-family: var(--nt-display);
+  font-optical-sizing: none; font-variation-settings: var(--nt-vf);
+  font-size: clamp(1.9rem, 1.5rem + 2vw, 2.75rem); font-weight: 600;
+  line-height: 1.08; letter-spacing: -0.02em;
+}
+.deck { margin: 0; font-size: 1rem; line-height: 1.6; color: var(--nt-on-ink-soft); max-width: 34rem; }
+
+main { padding: clamp(32px, 5vw, 52px) 0 clamp(40px, 6vw, 64px); }
+h2 {
+  font-family: var(--nt-display);
+  font-optical-sizing: none; font-variation-settings: var(--nt-vf);
+  font-size: 1.375rem; font-weight: 600; letter-spacing: -0.015em;
+  line-height: 1.25; margin: 2.25rem 0 0.75rem;
+}
+main > .shell > section:first-of-type h2 { margin-top: 0; }
+h3 {
+  font-family: var(--nt-sans); font-size: 1rem; font-weight: 650;
+  margin: 1.5rem 0 0.4rem; letter-spacing: -0.005em;
+}
+p, li { font-size: 15.5px; line-height: 1.65; color: var(--nt-ink-soft); }
+p { margin: 0 0 0.9rem; max-width: 38rem; }
+ul { margin: 0 0 0.9rem; padding-left: 1.15rem; max-width: 38rem; }
+li { margin-bottom: 0.4rem; }
+strong { color: var(--nt-ink); font-weight: 650; }
+a { color: var(--nt-stamp); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--nt-stamp); outline-offset: 3px; border-radius: 2px; }
+
+code {
+  font-family: var(--nt-mono); font-size: 0.9em;
+  background: var(--nt-stamp-wash); padding: 1px 5px; border-radius: 3px;
+  color: var(--nt-ink);
+}
+
+/* ---------- example blocks ---------- */
+.example {
+  margin: 0.25rem 0 1.25rem; padding: 14px 16px;
+  background: var(--nt-ink); color: #D8E0EC;
+  font-family: var(--nt-mono); font-size: 13px; line-height: 1.7;
+  border-radius: 3px; overflow-x: auto; white-space: pre; max-width: 38rem;
+}
+.example:focus-visible { outline: 3px solid var(--nt-stamp); outline-offset: 2px; }
+
+.next { list-style: none; padding: 0; }
+.next li { margin-bottom: 0.6rem; }
+.next a { font-weight: 600; }
+
+/* ---------- disclaimer (mirrors the talk's disclaimer slide) ---------- */
+.site-disclaimer {
+  margin: 0; padding: 22px 0 0; max-width: 46rem;
+  font-family: var(--nt-sans); font-size: 0.875rem; line-height: 1.6;
+  color: var(--nt-ink-soft);
+}
+.site-disclaimer strong { color: var(--nt-ink); }
+
+footer.colophon-wrap { border-top: 1px solid var(--nt-rule); }
+.colophon {
+  padding: 22px 0 44px; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline;
+  font-family: var(--nt-mono); font-size: 0.75rem; color: var(--nt-ink-soft);
+}
+.colophon a { color: var(--nt-stamp); text-underline-offset: 3px; }
+
+@media (max-width: 719px) {
+  :root { --nt-nav-h: 92px; }
+  .nt-nav { flex-direction: column; align-items: stretch; justify-content: center; gap: 8px; padding: 0 16px; }
+  .nt-mark { align-self: flex-start; font-size: 19px; }
+  .nt-links { gap: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+}
+
+/* Narrow screens: let the nav links wrap onto a second line instead of
+   scrolling sideways, so no link sits hidden off-screen. */
+@media (max-width: 719px) {
+  .nt-chrome { height: auto; position: static; }   /* a two-line bar shouldn't pin to the top of a phone screen */
+  .nt-nav { padding: 10px 16px; }
+  .nt-links { flex-wrap: wrap; overflow: visible; gap: 4px 18px; }
+  .nt-links li { margin: 0; line-height: normal; }
+}
+</style>
+</head>
+<body>
+
+<div class="nt-chrome">
+  <a class="nt-skip" href="#nt-main">Skip to content</a>
+  <nav class="nt-nav" aria-label="Site">
+    <a class="nt-mark" href="index.html">Natascha Truong</a>
+    <ul class="nt-links">
+      <li><a href="design-tokens.html" aria-current="page">Design Tokens</a></li>
+      <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
+      <li><a href="token-foundry.html">Token Foundry</a></li>
+      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+    </ul>
+  </nav>
+</div>
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">Design tokens</p>
+    <h1>Your source of truth</h1>
+    <p class="deck">A design token system is the one place your design decisions live. Your Figma designs, your code, and your AI tools should all use it.</p>
+  </div>
+</header>
+
+<main id="nt-main" tabindex="-1">
+  <div class="shell">
+
+    <section aria-labelledby="what">
+      <h2 id="what">What is a design token?</h2>
+      <p>A design token is information associated with a human-readable name. At minimum, it is a name and value pair. For example:</p>
+      <pre class="example" tabindex="0" role="region" aria-label="Name and value examples, scrollable">color-text-primary: #000000;
+font-size-heading-level-1: 44px;</pre>
+    </section>
+
+    <section aria-labelledby="properties">
+      <h2 id="properties">Design token properties</h2>
+      <p>A token name can carry more information than its value. For example:</p>
+      <ul>
+        <li><strong>Value</strong> — the color, size, or other setting itself</li>
+        <li><strong>Type</strong> — what kind of value it is, such as a color or a dimension</li>
+        <li><strong>Description</strong> — a note on when to use it</li>
+      </ul>
+      <p>Tools and design systems can add more metadata to extend the format as needed.</p>
+    </section>
+
+    <section aria-labelledby="file">
+      <h2 id="file">The design token file</h2>
+      <p>Design token files are JSON files. This example follows the format from the <a href="https://www.designtokens.org/">Design Tokens Community Group</a>. It defines one color token, pure red, written as red, green, and blue values from 0 to 1:</p>
+      <pre class="example" tabindex="0" role="region" aria-label="JSON token file example, scrollable">{
+  "token name": {
+    "$type": "color",
+    "$value": {
+      "colorSpace": "srgb",
+      "components": [1, 0, 0]
+    }
+  }
+}</pre>
+      <p>Figma has announced support for importing and exporting variables in this format. Check Figma's documentation for what is available on your plan.</p>
+    </section>
+
+    <section aria-labelledby="use">
+      <h2 id="use">How to use your token file</h2>
+
+      <h3>Use one file for design and code</h3>
+      <p>A single token file can be used to generate CSS custom properties, Sass variables, Figma variables, and more. This keeps design and code aligned.</p>
+
+      <h3>Build accessibility into the file</h3>
+      <p>Add color pairs that you have already checked for contrast, and minimum type sizes, as tokens. Check your color pairs with the <a href="contrast-matrix.html">Contrast Matrix</a> or <a href="token-foundry.html">Token Foundry</a> before you add them. Contrast is only one part of WCAG, so this does not replace testing your finished pages.</p>
+
+      <h3>Tell AI tools to use it</h3>
+      <p>You can point Claude Code to your JSON token file and tell it to use those variables when it writes the code for your design. Then check its work yourself. AI tools can still add values that are not in your file.</p>
+    </section>
+
+    <section aria-labelledby="next">
+      <h2 id="next">Next steps</h2>
+      <ul class="next">
+        <li><a href="token-foundry.html">Build a token file with Token Foundry</a></li>
+        <li><a href="figma-first-workflow-guide.html">Follow the Figma-first workflow</a></li>
+        <li><a href="index.html#resources">See more resources</a></li>
+      </ul>
+    </section>
+
+  </div>
+</main>
+
+<footer class="colophon-wrap">
+  <div class="shell">
+    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+    <div class="colophon">
+      <span>© 2026 Natascha Truong. All rights reserved.</span>
+      <a href="accessibility.html">Accessibility</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
