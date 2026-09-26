@@ -2164,7 +2164,7 @@ function deriveRules(){
   state.action.forEach(a=>{
     const r=contrast(rawHex(a.bg),rawHex(a.text)), fill=contrast(rawHex(a.bg),"#FFFFFF");
     let line=`\`action.${a.name}\` — ${a.text} on ${a.bg} is ${fmtRatio(r)} (${verdictWord(r)}).`;
-    if(fill<3) line+=` Fill is ${fmtRatio(fill)} vs white, so a border ≥3:1 is **required** (SC 1.4.11)${a.border?` — using \`${a.border}\``:", but none is set"}.`;
+    if(fill<3) line+=` Fill is ${fmtRatio(fill)} vs white, so a border of at least 3:1 is recommended so people can see the button's edge (not required by SC 1.4.11 when the button has a text label)${a.border?` — using \`${a.border}\``:", but none is set"}.`;
     rules.push(line);
   });
   state.surface.forEach(s=>{
