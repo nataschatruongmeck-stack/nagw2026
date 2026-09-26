@@ -665,8 +665,6 @@ main[tabindex="-1"]:focus-visible {
     <div class="spacer"></div>
     <div class="top-actions">
       <button class="btn ghost" id="loadSample">Load sample</button>
-      <button class="btn ghost" id="importBtn">Import JSON</button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
       <button class="btn ghost" id="resetBtn">Clear all</button>
     </div>
   </header>
@@ -2232,7 +2230,7 @@ function buildInstructions(){
   L.push(``,`## Components`,``);
   L.push(`Target size is not checked by Token Foundry — confirm button dimensions yourself. 44×44px is a common best-practice target (WCAG 2.1 SC 2.5.5, Level AAA); WCAG 2.2 SC 2.5.8 sets a 24×24px minimum at Level AA. Card, input, and button dimensions are under \`component.*\` in rem. Apply \`focus.ring-color\` as a visible 2px focus outline with a 2px offset on every interactive element.`,``);
   L.push(`## Maintaining`,``);
-  L.push(`Reopen \`token-foundry.html\`, use **Import JSON** to load this file, edit, and re-export. The contrast metadata and these rules regenerate from the palette every time you export. Review the output before using it.`,``);
+  L.push(`To change a value, edit it in Token Foundry and export a new file. The contrast metadata and these rules regenerate from the palette every time you export. Review the output before using it.`);
   return L.join("\n");
 }
 
@@ -2288,153 +2286,6 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
   };
   replaceStateWithUndo(blank, "Cleared to a blank starter");
 });
-
-// Import existing tokens (best-effort: raw palette + typography from a DTCG-ish file)
-document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change",(e)=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const j=JSON.parse(reader.result);
-      IMPORT_SUMMARY=""; importTokens(j); cleanImportedNames(); renderAll();
-      toast("Imported "+f.name+IMPORT_SUMMARY);
-    }catch(err){ toast("Could not parse that JSON"); }
-    e.target.value="";
-  };
-  reader.readAsText(f);
-});
-/* Names from an imported file may contain . $ { } — typing those is blocked,
-   but a file can still carry them. Replace them with "-", and carry raw color
-   renames through to every reference. */
-function cleanImportedNames(){
-  let n=0;
-  for(const arr of Object.values(nameCollections())){
-    if(!Array.isArray(arr)) continue;
-    arr.forEach(it=>{
-      const clean=String(it.name).replace(/[.{}$]+/g,"-");
-      if(clean!==it.name){
-        const old=it.name; it.name=clean; n++;
-        if(state.raw.includes(it)) renameColorRefs(old, clean);
-      }
-    });
-  }
-  if(n) IMPORT_SUMMARY += ` — ${n} name${n>1?"s":""} changed to remove . $ { or }`;
-}
-/* ---- import helpers ---- */
-let IMPORT_SUMMARY = "";
-function num(x){ const n=Number(x); return isFinite(n)?n:0; }
-function round4(n){ return Math.round(n*10000)/10000; }
-function tokVal(t){ return (t && typeof t==="object" && "$value" in t) ? t.$value : t; }
-function wrapSection(skipped,label,fn){ try{ fn(); }catch(e){ skipped.push(label); } }
-// composite/array shadow (or legacy string) back to a CSS string for the UI
-function shadowToCss(tok){
-  const css=tok && tok["$extensions"] && tok["$extensions"]["foundry.css"];
-  if(css) return String(css);
-  const v=tokVal(tok);
-  if(typeof v==="string") return v;
-  const layer=l=>[l.inset?"inset":"", l.offsetX, l.offsetY, l.blur, l.spread, l.color].filter(Boolean).join(" ");
-  if(Array.isArray(v)) return v.map(layer).join(", ");
-  if(v && typeof v==="object") return layer(v);
-  return "0 1px 2px rgba(0,0,0,0.1)";
-}
-// cubic-bezier array (or legacy string) back to a CSS string
-function easingToCss(tok){
-  const css=tok && tok["$extensions"] && tok["$extensions"]["foundry.css"];
-  if(css) return String(css);
-  const v=tokVal(tok);
-  if(Array.isArray(v)) return `cubic-bezier(${v.join(", ")})`;
-  return String(v==null?"":v);
-}
-// component shadow: dereference {shadow.name} → token name ("" for none)
-function shadowRefName(tok){
-  const v=tokVal(tok);
-  if(typeof v==="string"){ const m=v.match(/\{shadow\.([^}]+)\}/); if(m) return m[1]; }
-  return "";
-}
-
-function importTokens(j){
-  let unresolved=0; const skipped=[];
-  const remBaseIn = num(j["$extensions"] && j["$extensions"]["foundry.meta"] && j["$extensions"]["foundry.meta"].baseFontSize)
-                 || num(j.meta && j.meta.baseFontSize) || 16;
-  const toPx = raw => {
-    const s=String(tokVal(raw)==null?"":tokVal(raw)).trim();
-    if(!s) return 0;
-    if(/rem$/i.test(s)) return round4(parseFloat(s)*remBaseIn);
-    if(/px$/i.test(s)) return round4(parseFloat(s));
-    const n=parseFloat(s); return isFinite(n)?n:0;
-  };
-  const mapScale = obj => Object.entries(obj).map(([name,t])=>({name, v: toPx(t)}));
-  const ref = x => {
-    const v=(x && x.$value!==undefined) ? x.$value : (typeof x==="string"?x:"");
-    const m=String(v).match(/\{color\.raw\.([^}]+)\}/) || String(v).match(/\{color\.[a-z-]+\.([^}]+)\}/i) || String(v).match(/\{color\.([^}]+)\}/);
-    if(m){ if(state.raw.some(c=>c.name===m[1])) return m[1]; unresolved++; return state.raw[0]?.name||"black"; }
-    const hit=state.raw.find(c=>c.v.toLowerCase()===String(v).toLowerCase());
-    if(hit) return hit.name;
-    if(String(v)) unresolved++;
-    return state.raw[0]?.name||"black";
-  };
-
-  // metadata (first; also gives us the file's base font size for conversions)
-  const fmeta = (j["$extensions"] && j["$extensions"]["foundry.meta"]) || j.meta;
-  if(fmeta){ state.meta={ ...state.meta,
-    name: fmeta.name ?? state.meta.name,
-    version: fmeta.version ?? state.meta.version,
-    description: fmeta.description ?? state.meta.description,
-    baseFontSize: num(fmeta.baseFontSize) || state.meta.baseFontSize }; }
-
-  // raw palette FIRST so references can be validated against it
-  wrapSection(skipped,"color.raw",()=>{ if(j.color?.raw) state.raw = Object.entries(j.color.raw).map(([name,tok])=>({name, v: String(tokVal(tok)||"#000000")})); });
-
-  // semantic colors
-  wrapSection(skipped,"color.action",()=>{ if(j.color?.action) state.action=Object.entries(j.color.action).map(([name,a])=>({ name, bg:ref(a.bg), text:ref(a.text), border:a.border?ref(a.border):"" })); });
-  wrapSection(skipped,"color.status",()=>{ if(j.color?.status) state.status=Object.entries(j.color.status).map(([name,s])=>({ name, fg:ref(s.fg), bg:ref(s.bg), icon:String(tokVal(s.icon)||"info") })); });
-  wrapSection(skipped,"color.surface",()=>{ if(j.color?.surface) state.surface=Object.entries(j.color.surface).map(([name,s])=>({ name, bg:ref(s.bg), text:ref(s.text) })); });
-  wrapSection(skipped,"color.link",()=>{ if(j.color?.link) state.link=ref(j.color.link.fg||j.color.link); });
-  wrapSection(skipped,"color.focus",()=>{ if(j.color?.focus) state.focusRing=ref(j.color.focus["ring-color"]||j.color.focus); });
-
-  // typography (rem → px using the file's base)
-  wrapSection(skipped,"typography",()=>{
-    const t=j.typography; if(!t) return;
-    if(t.family!==undefined){
-      const fv=tokVal(t.family);
-      if(Array.isArray(fv)){
-        state.typography.family = String(fv[0]!=null?fv[0]:"system-ui");
-        const gen=["serif","sans-serif","monospace"];
-        const lastGen=[...fv].reverse().map(String).find(x=>gen.includes(x.toLowerCase()));
-        if(lastGen) state.typography.fallback=lastGen.toLowerCase();
-      } else if(fv!=null){
-        state.typography.family = String(fv);
-      }
-    }
-    ["desktop","mobile"].forEach(dev=>{
-      if(t[dev]) state.typography[dev]=Object.entries(t[dev]).map(([name,r])=>({ name, size:toPx(r.fontSize), lh:toPx(r.lineHeight), weight:num(tokVal(r.fontWeight))||400 }));
-    });
-  });
-
-  // dimensional scales
-  wrapSection(skipped,"spacing",()=>{ if(j.spacing) state.spacing=mapScale(j.spacing); });
-  wrapSection(skipped,"radius",()=>{ if(j.radius) state.radii=mapScale(j.radius); });
-  wrapSection(skipped,"borderWidth",()=>{ if(j.borderWidth) state.border=mapScale(j.borderWidth); });
-  wrapSection(skipped,"breakpoint",()=>{ if(j.breakpoint) state.breakpoint=mapScale(j.breakpoint); });
-  wrapSection(skipped,"zIndex",()=>{ if(j.zIndex) state.zindex=Object.entries(j.zIndex).map(([name,t])=>({name,v:num(tokVal(t))})); });
-  wrapSection(skipped,"opacity",()=>{ if(j.opacity) state.opacity=Object.entries(j.opacity).map(([name,t])=>({name,v:num(tokVal(t))})); });
-
-  // shadows (string or composite) & motion
-  wrapSection(skipped,"shadow",()=>{ if(j.shadow) state.shadow=Object.entries(j.shadow).map(([name,t])=>({name, v: shadowToCss(t)})); });
-  wrapSection(skipped,"duration",()=>{ if(j.duration) state.duration=Object.entries(j.duration).map(([name,t])=>({name, v: num(String(tokVal(t)).replace(/ms$/i,""))})); });
-  wrapSection(skipped,"easing",()=>{ if(j.easing) state.easing=Object.entries(j.easing).map(([name,t])=>({name, v: easingToCss(t)})); });
-
-  // components (rem → px, map titleBorder* back, deref shadow references)
-  wrapSection(skipped,"component.button",()=>{ if(j.component?.button) state.component.button=Object.entries(j.component.button).map(([name,b])=>({ name, minHeight:toPx(b.minHeight), minWidth:toPx(b.minWidth), padding:toPx(b.padding), radius:toPx(b.radius), shadow:shadowRefName(b.shadow) })); });
-  wrapSection(skipped,"component.card",()=>{ const c=j.component?.card; if(c) state.component.card={ radius:toPx(c.radius), gap:toPx(c.gap), paddingNoImage:toPx(c.paddingNoImage), paddingWithImage:toPx(c.paddingWithImage), borderRest:toPx(c.titleBorderRest ?? c.borderRest), borderHover:toPx(c.titleBorderHover ?? c.borderHover), shadow:shadowRefName(c.shadow) }; });
-  wrapSection(skipped,"component.input",()=>{ const c=j.component?.input; if(c) state.component.input={ minHeight:toPx(c.minHeight), padding:toPx(c.padding), radius:toPx(c.radius), borderWidth:toPx(c.borderWidth), shadow:shadowRefName(c.shadow) }; });
-
-  const parts=[];
-  if(unresolved) parts.push(`${unresolved} unresolved color reference${unresolved>1?"s":""} defaulted`);
-  if(skipped.length) parts.push(`${skipped.length} malformed section${skipped.length>1?"s":""} skipped (${skipped.join(", ")})`);
-  IMPORT_SUMMARY = parts.length ? " — "+parts.join(" · ") : "";
-}
 
 // Hard-reject characters that break DTCG reference syntax in token names (Task 5)
 function isNameField(t){
