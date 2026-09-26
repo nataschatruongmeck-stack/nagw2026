@@ -665,8 +665,6 @@ main[tabindex="-1"]:focus-visible {
     <div class="spacer"></div>
     <div class="top-actions">
       <button class="btn ghost" id="loadSample">Load sample</button>
-      <button class="btn ghost" id="importBtn">Import JSON</button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
       <button class="btn ghost" id="resetBtn">Clear all</button>
     </div>
   </header>
@@ -916,7 +914,7 @@ function wireScale(key, valueType){
     });
   }
   const add = document.querySelector(`[data-add="${key}"]`);
-  if(add) add.addEventListener("click",()=>{ state[key].push(defaultRow(key)); renderAll(); });
+  if(add) add.addEventListener("click",()=>{ const row=defaultRow(key); row.name=uniqueName(row.name,state[key]); state[key].push(row); renderAll(); });
 }
 let CURRENT_OUTFMT = null;
 
@@ -1057,7 +1055,7 @@ function tabColors(){
     <div class="matrix-wrap" tabindex="0" role="region" aria-label="Contrast matrix, scrollable"><table class="matrix">${matrix}</table></div>
   </div>
 
-  <div class="card"><h3>Semantic · action pairs (buttons)</h3><p class="sub">Background + its legal text color, and a required border where the fill is below 3:1 on white (SC 1.4.11).</p>
+  <div class="card"><h3>Semantic · action pairs (buttons)</h3><p class="sub">Background + its text color. A border is recommended where the fill is below 3:1 on white, so people can see the button's edge. A button with a text label doesn't need one to meet SC 1.4.11.</p>
     <div class="pairs">${actionCards}</div>
     <button class="add-row" data-addaction>+ Add action</button>
   </div>
@@ -1102,7 +1100,7 @@ function actionCard(a,i){
         <div><span class="mini-label">bg</span><select data-ak="bg" data-ai="${i}" aria-label="Action ${esc(a.name)} background">${opts}</select></div>
         <div><span class="mini-label">text</span><select data-ak="text" data-ai="${i}" aria-label="Action ${esc(a.name)} text">${opts}</select></div>
       </div>
-      <div><span class="mini-label">border ${needBorder?"(required — fill < 3:1 on white)":"(optional)"}</span>
+      <div><span class="mini-label">border ${needBorder?"(recommended — fill is under 3:1 on white)":"(optional)"}</span>
         <select data-ak="border" data-ai="${i}" aria-label="Action ${esc(a.name)} border">${noneOpt}${opts}</select></div>
       <div class="verdict" style="background:${vcolor};color:${vink}">text ${fmtRatio(r)} · ${v} &nbsp;·&nbsp; fill vs white ${fmtRatio(fillR)}</div>
     </div>
@@ -1223,7 +1221,7 @@ function wireColors(){
     }));
   }
   const addRaw=document.querySelector("[data-addraw]");
-  if(addRaw) addRaw.addEventListener("click",()=>{ state.raw.push({name:"color-"+(state.raw.length+1),v:"#888888"}); renderAll(); });
+  if(addRaw) addRaw.addEventListener("click",()=>{ state.raw.push({name:uniqueName("new-color",state.raw),v:"#888888"}); renderAll(); });
 
   // action selects/inputs
   document.querySelectorAll("[data-ai]").forEach(el=>{
@@ -1235,9 +1233,9 @@ function wireColors(){
   document.querySelectorAll("[data-ui]").forEach(el=>{
     el.addEventListener("input",()=>{ const i=+el.dataset.ui; state.surface[i][el.dataset.uk]=el.value; renderColorsLive(); announceColorChange(el); });
   });
-  document.querySelector("[data-addaction]")?.addEventListener("click",()=>{ state.action.push({name:"new",bg:rawNames()[0]||"black",text:"white",border:""}); renderAll(); });
-  document.querySelector("[data-addstatus]")?.addEventListener("click",()=>{ state.status.push({name:"new",fg:"black",bg:"white",icon:"info"}); renderAll(); });
-  document.querySelector("[data-addsurface]")?.addEventListener("click",()=>{ state.surface.push({name:"new",bg:"white",text:"black"}); renderAll(); });
+  document.querySelector("[data-addaction]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=rawNames()[0]; state.action.push({name:uniqueName("new",state.action),bg,text:bestContrastName(bg),border:""}); renderAll(); });
+  document.querySelector("[data-addstatus]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.status.push({name:uniqueName("new",state.status),fg:bestContrastName(bg),bg,icon:"info"}); renderAll(); });
+  document.querySelector("[data-addsurface]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.surface.push({name:uniqueName("new",state.surface),bg,text:bestContrastName(bg)}); renderAll(); });
 
   // set select values (selects need value assigned after render)
   syncColorSelects();
@@ -1248,6 +1246,59 @@ function wireColors(){
   if(focus){ setSelectValue(focus,state.focusRing); focus.addEventListener("change",()=>{ state.focusRing=focus.value; updateColorHints(); renderArtifact();
     const r=contrast(rawHex(state.focusRing),"#FFFFFF"); announce(`Focus ring ${state.focusRing}: ${spk(r)} versus white — ${r>=3?"passes non-text contrast":"fails, needs 3 to one"}.`); }); }
   updateColorHints();
+}
+
+/* New rows used to all be named "new". Two of them collide as JSON keys and
+   the export silently keeps only one, so each new row gets a free name. */
+function uniqueName(base, arr){
+  const names=new Set((arr||[]).map(x=>x.name));
+  if(!names.has(base)) return base;
+  let n=2; while(names.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+// The raw color with the most contrast against `against` (a raw name).
+function bestContrastName(against){
+  const bg=rawHex(against); let best="", bestR=0;
+  rawNames().forEach(n=>{ const r=contrast(rawHex(n),bg); if(r>bestR){ bestR=r; best=n; } });
+  return best;
+}
+// The lightest raw color, used as the background for new status/surface pairs.
+function lightestName(){
+  let best="", bestL=-1;
+  state.raw.forEach(c=>{ const h=/^#[0-9a-f]{6}$/i.test(c.v)?c.v:"#000000"; const l=contrast(h,"#000000"); if(l>bestL){ bestL=l; best=c.name; } });
+  return best;
+}
+function needRawColor(){
+  if(state.raw.length) return false;
+  toast("Add a raw color first"); announce("Add a raw color first.");
+  return true;
+}
+
+/* Everything that would make the exported file unusable. Style Dictionary
+   (and any other DTCG tool) rejects each of these. */
+function exportProblems(){
+  const out=[];
+  missingColorRefs().forEach(m=>out.push(`${m.where} points to a missing color (${m.name})`));
+  validateNames().dupNames.forEach(d=>out.push(`duplicate name: ${d}`));
+  for(const [key,arr] of Object.entries(nameCollections())){
+    if(!Array.isArray(arr)) continue;
+    arr.forEach(it=>{ if(/[.{}$]/.test(String(it.name))) out.push(`name with . $ { or }: ${key}.${it.name}`); });
+  }
+  (function walk(o,path){
+    for(const [k,v] of Object.entries(o||{})){
+      if(k.startsWith("$") && k!=="$value") continue;
+      if(v && typeof v==="object" && "$value" in v){
+        const val=v.$value;
+        if(val==null || (typeof val==="number" && !isFinite(val)) || (typeof val==="string" && /NaN|undefined/.test(val)))
+          out.push(`invalid value: ${path}${k}`);
+      } else if(v && typeof v==="object" && !Array.isArray(v)) walk(v, `${path}${k}.`);
+    }
+  })(buildTokens(),"");
+  return out;
+}
+// Buttons whose fill is under 3:1 on white and that have no border.
+function missingRequiredBorders(){
+  return state.action.filter(a=>rawNames().includes(a.bg) && contrast(rawHex(a.bg),"#FFFFFF")<3 && !a.border).map(a=>a.name);
 }
 
 function refreshColorsOutsideGrid(){
@@ -1482,7 +1533,7 @@ function wireTypography(){
     spec.querySelector("[data-tdel]")?.addEventListener("click",()=>{ deleteWithUndo(state.typography[dev], i, `Removed ${dev} ${state.typography[dev][i].name}`); });
   });
   document.querySelectorAll("[data-addtype]").forEach(b=>b.addEventListener("click",()=>{
-    state.typography[b.dataset.addtype].push({name:"new",size:16,lh:24,weight:400}); renderAll();
+    state.typography[b.dataset.addtype].push({name:uniqueName("new",state.typography[b.dataset.addtype]),size:16,lh:24,weight:400}); renderAll();
   }));
 }
 
@@ -1515,8 +1566,8 @@ function wireMotion(){
     });
   });
   document.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",()=>{ const arr=b.dataset.mdel, i=+b.dataset.mi; deleteWithUndo(state[arr], i, `Removed ${arr} ${state[arr][i].name}`); }));
-  document.querySelector('[data-add="duration"]')?.addEventListener("click",()=>{ state.duration.push({name:"new",v:200}); renderAll(); });
-  document.querySelector('[data-add="easing"]')?.addEventListener("click",()=>{ state.easing.push({name:"new",v:"cubic-bezier(0.2, 0, 0, 1)"}); renderAll(); });
+  document.querySelector('[data-add="duration"]')?.addEventListener("click",()=>{ state.duration.push({name:uniqueName("new",state.duration),v:200}); renderAll(); });
+  document.querySelector('[data-add="easing"]')?.addEventListener("click",()=>{ state.easing.push({name:uniqueName("new",state.easing),v:"cubic-bezier(0.2, 0, 0, 1)"}); renderAll(); });
 }
 
 /* ---------- Components ---------- */
@@ -1622,7 +1673,7 @@ function wireComponent(){
     });
   });
   document.querySelectorAll("[data-bdel]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.bdel; deleteWithUndo(state.component.button, i, `Removed button ${state.component.button[i].name}`); }));
-  document.querySelector("[data-addbtn]")?.addEventListener("click",()=>{ state.component.button.push({name:"new",minHeight:44,minWidth:120,padding:16,radius:8,shadow:""}); renderAll(); });
+  document.querySelector("[data-addbtn]")?.addEventListener("click",()=>{ state.component.button.push({name:uniqueName("new",state.component.button),minHeight:44,minWidth:120,padding:16,radius:8,shadow:""}); renderAll(); });
   document.querySelectorAll("[data-cardk]").forEach(el=>el.addEventListener("input",()=>{ state.component.card[el.dataset.cardk]=Number(el.value); refreshComponentPreview(); renderArtifact(); }));
   document.querySelectorAll("[data-inputk]").forEach(el=>el.addEventListener("input",()=>{ state.component.input[el.dataset.inputk]=Number(el.value); refreshComponentPreview(); renderArtifact(); }));
   const cs=document.getElementById("card-shadow");
@@ -1710,7 +1761,7 @@ function buildTokens(){
     if(a.border) tok.border={ "$value":`{color.raw.${a.border}}`, "width":"1px" };
     const ext={ "io.github.nataschatruongmeck-stack.contrast": contrastExt(bgHex,txHex) };
     const fillR=contrast(bgHex,"#FFFFFF");
-    if(fillR<3) ext["io.github.nataschatruongmeck-stack.note"]=`Border required: fill is ${fmtRatio(fillR)} vs white (SC 1.4.11).`;
+    if(fillR<3) ext["io.github.nataschatruongmeck-stack.note"]=`Border recommended: fill is ${fmtRatio(fillR)} vs white. Not required by SC 1.4.11 when the button has a text label.`;
     tok["$extensions"]=ext;
     out.color.action[a.name]=tok;
   });
@@ -1883,15 +1934,15 @@ function applyNameFlags(v){
 function renderNameCheck(v){
   const nc=document.getElementById("nameCheck");
   if(!nc) return;
-  const dn=v.dupNames.length, wn=v.warns.length, miss=missingColorRefs();
-  if(!dn && !wn && !miss.length){ nc.innerHTML=""; nc.style.display="none"; }
+  const dn=v.dupNames.length, wn=v.warns.length, probs=exportProblems(), borders=missingRequiredBorders();
+  if(!probs.length && !wn && !borders.length){ nc.innerHTML=""; nc.style.display="none"; }
   else {
     nc.style.display="block";
     const parts=[];
-    if(miss.length) parts.push(`<span class="nc-err">⚠ ${miss.length} missing color${miss.length>1?"s":""} — export blocked</span>`);
-    if(dn) parts.push(`<span class="nc-err">⚠ ${dn} duplicate name${dn>1?"s":""}</span>`);
+    if(probs.length) parts.push(`<span class="nc-err">⚠ ${probs.length} problem${probs.length>1?"s":""} — export blocked</span>`);
+    if(borders.length) parts.push(`<span class="nc-warn">${borders.length} button${borders.length>1?"s":""} without a recommended border</span>`);
     if(wn) parts.push(`<span class="nc-warn">${wn} non-standard name${wn>1?"s":""}</span>`);
-    const list=[...miss.map(m=>"missing · "+m.where+" → "+m.name), ...v.dupes.map(d=>"duplicate · "+d.key+"."+d.name), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
+    const list=[...probs.map(x=>"blocks export · "+x), ...borders.map(b=>"border recommended · action."+b+" (fill is under 3:1 on white)"), ...v.warns.map(w=>"format · "+w.key+"."+w.name)]
       .map(esc).join("<br>");
     nc.innerHTML=`<div>${parts.join(" · ")}</div><details><summary>show details</summary><div class="nc-list">${list}</div></details>`;
   }
@@ -2051,7 +2102,7 @@ function announceColorChange(el){
     const a=state.action[+ai]; const r=contrast(rawHex(a.bg),rawHex(a.text));
     let m=`Action ${a.name}: ${a.text} on ${a.bg}, ${spk(r)}, ${spokenVerdict(r)}.`;
     const fill=contrast(rawHex(a.bg),"#FFFFFF");
-    if(fill<3) m+=` Fill is ${spk(fill)} on white — border required.`;
+    if(fill<3) m+=` Fill is ${spk(fill)} on white — a border is recommended.`;
     announce(m);
   } else if(si!=null){
     const s=state.status[+si]; const r=contrast(rawHex(s.fg),rawHex(s.bg));
@@ -2179,14 +2230,14 @@ function buildInstructions(){
   L.push(``,`## Components`,``);
   L.push(`Target size is not checked by Token Foundry — confirm button dimensions yourself. 44×44px is a common best-practice target (WCAG 2.1 SC 2.5.5, Level AAA); WCAG 2.2 SC 2.5.8 sets a 24×24px minimum at Level AA. Card, input, and button dimensions are under \`component.*\` in rem. Apply \`focus.ring-color\` as a visible 2px focus outline with a 2px offset on every interactive element.`,``);
   L.push(`## Maintaining`,``);
-  L.push(`Reopen \`token-foundry.html\`, use **Import JSON** to load this file, edit, and re-export. The contrast metadata and these rules regenerate from the palette every time you export. Review the output before using it.`,``);
+  L.push(`To change a value, edit it in Token Foundry and export a new file. The contrast metadata and these rules regenerate from the palette every time you export. Review the output before using it.`);
   return L.join("\n");
 }
 
 function exportBlocked(){
-  const m=missingColorRefs();
-  if(!m.length) return false;
-  const msg=`Can't export yet: ${m.length} color reference${m.length>1?"s point":" points"} to a missing color. See the warning on the Colors tab.`;
+  const probs=exportProblems();
+  if(!probs.length) return false;
+  const msg=`Can't export yet: ${probs.length} problem${probs.length>1?"s":""} would break the file. See the list next to the JSON.`;
   toast(msg); announce(msg);
   return true;
 }
@@ -2235,136 +2286,6 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
   };
   replaceStateWithUndo(blank, "Cleared to a blank starter");
 });
-
-// Import existing tokens (best-effort: raw palette + typography from a DTCG-ish file)
-document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change",(e)=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const j=JSON.parse(reader.result);
-      IMPORT_SUMMARY=""; importTokens(j); renderAll();
-      toast("Imported "+f.name+IMPORT_SUMMARY);
-    }catch(err){ toast("Could not parse that JSON"); }
-    e.target.value="";
-  };
-  reader.readAsText(f);
-});
-/* ---- import helpers ---- */
-let IMPORT_SUMMARY = "";
-function num(x){ const n=Number(x); return isFinite(n)?n:0; }
-function round4(n){ return Math.round(n*10000)/10000; }
-function tokVal(t){ return (t && typeof t==="object" && "$value" in t) ? t.$value : t; }
-function wrapSection(skipped,label,fn){ try{ fn(); }catch(e){ skipped.push(label); } }
-// composite/array shadow (or legacy string) back to a CSS string for the UI
-function shadowToCss(tok){
-  const css=tok && tok["$extensions"] && tok["$extensions"]["foundry.css"];
-  if(css) return String(css);
-  const v=tokVal(tok);
-  if(typeof v==="string") return v;
-  const layer=l=>[l.inset?"inset":"", l.offsetX, l.offsetY, l.blur, l.spread, l.color].filter(Boolean).join(" ");
-  if(Array.isArray(v)) return v.map(layer).join(", ");
-  if(v && typeof v==="object") return layer(v);
-  return "0 1px 2px rgba(0,0,0,0.1)";
-}
-// cubic-bezier array (or legacy string) back to a CSS string
-function easingToCss(tok){
-  const css=tok && tok["$extensions"] && tok["$extensions"]["foundry.css"];
-  if(css) return String(css);
-  const v=tokVal(tok);
-  if(Array.isArray(v)) return `cubic-bezier(${v.join(", ")})`;
-  return String(v==null?"":v);
-}
-// component shadow: dereference {shadow.name} → token name ("" for none)
-function shadowRefName(tok){
-  const v=tokVal(tok);
-  if(typeof v==="string"){ const m=v.match(/\{shadow\.([^}]+)\}/); if(m) return m[1]; }
-  return "";
-}
-
-function importTokens(j){
-  let unresolved=0; const skipped=[];
-  const remBaseIn = num(j["$extensions"] && j["$extensions"]["foundry.meta"] && j["$extensions"]["foundry.meta"].baseFontSize)
-                 || num(j.meta && j.meta.baseFontSize) || 16;
-  const toPx = raw => {
-    const s=String(tokVal(raw)==null?"":tokVal(raw)).trim();
-    if(!s) return 0;
-    if(/rem$/i.test(s)) return round4(parseFloat(s)*remBaseIn);
-    if(/px$/i.test(s)) return round4(parseFloat(s));
-    const n=parseFloat(s); return isFinite(n)?n:0;
-  };
-  const mapScale = obj => Object.entries(obj).map(([name,t])=>({name, v: toPx(t)}));
-  const ref = x => {
-    const v=(x && x.$value!==undefined) ? x.$value : (typeof x==="string"?x:"");
-    const m=String(v).match(/\{color\.raw\.([^}]+)\}/) || String(v).match(/\{color\.[a-z-]+\.([^}]+)\}/i) || String(v).match(/\{color\.([^}]+)\}/);
-    if(m){ if(state.raw.some(c=>c.name===m[1])) return m[1]; unresolved++; return state.raw[0]?.name||"black"; }
-    const hit=state.raw.find(c=>c.v.toLowerCase()===String(v).toLowerCase());
-    if(hit) return hit.name;
-    if(String(v)) unresolved++;
-    return state.raw[0]?.name||"black";
-  };
-
-  // metadata (first; also gives us the file's base font size for conversions)
-  const fmeta = (j["$extensions"] && j["$extensions"]["foundry.meta"]) || j.meta;
-  if(fmeta){ state.meta={ ...state.meta,
-    name: fmeta.name ?? state.meta.name,
-    version: fmeta.version ?? state.meta.version,
-    description: fmeta.description ?? state.meta.description,
-    baseFontSize: num(fmeta.baseFontSize) || state.meta.baseFontSize }; }
-
-  // raw palette FIRST so references can be validated against it
-  wrapSection(skipped,"color.raw",()=>{ if(j.color?.raw) state.raw = Object.entries(j.color.raw).map(([name,tok])=>({name, v: String(tokVal(tok)||"#000000")})); });
-
-  // semantic colors
-  wrapSection(skipped,"color.action",()=>{ if(j.color?.action) state.action=Object.entries(j.color.action).map(([name,a])=>({ name, bg:ref(a.bg), text:ref(a.text), border:a.border?ref(a.border):"" })); });
-  wrapSection(skipped,"color.status",()=>{ if(j.color?.status) state.status=Object.entries(j.color.status).map(([name,s])=>({ name, fg:ref(s.fg), bg:ref(s.bg), icon:String(tokVal(s.icon)||"info") })); });
-  wrapSection(skipped,"color.surface",()=>{ if(j.color?.surface) state.surface=Object.entries(j.color.surface).map(([name,s])=>({ name, bg:ref(s.bg), text:ref(s.text) })); });
-  wrapSection(skipped,"color.link",()=>{ if(j.color?.link) state.link=ref(j.color.link.fg||j.color.link); });
-  wrapSection(skipped,"color.focus",()=>{ if(j.color?.focus) state.focusRing=ref(j.color.focus["ring-color"]||j.color.focus); });
-
-  // typography (rem → px using the file's base)
-  wrapSection(skipped,"typography",()=>{
-    const t=j.typography; if(!t) return;
-    if(t.family!==undefined){
-      const fv=tokVal(t.family);
-      if(Array.isArray(fv)){
-        state.typography.family = String(fv[0]!=null?fv[0]:"system-ui");
-        const gen=["serif","sans-serif","monospace"];
-        const lastGen=[...fv].reverse().map(String).find(x=>gen.includes(x.toLowerCase()));
-        if(lastGen) state.typography.fallback=lastGen.toLowerCase();
-      } else if(fv!=null){
-        state.typography.family = String(fv);
-      }
-    }
-    ["desktop","mobile"].forEach(dev=>{
-      if(t[dev]) state.typography[dev]=Object.entries(t[dev]).map(([name,r])=>({ name, size:toPx(r.fontSize), lh:toPx(r.lineHeight), weight:num(tokVal(r.fontWeight))||400 }));
-    });
-  });
-
-  // dimensional scales
-  wrapSection(skipped,"spacing",()=>{ if(j.spacing) state.spacing=mapScale(j.spacing); });
-  wrapSection(skipped,"radius",()=>{ if(j.radius) state.radii=mapScale(j.radius); });
-  wrapSection(skipped,"borderWidth",()=>{ if(j.borderWidth) state.border=mapScale(j.borderWidth); });
-  wrapSection(skipped,"breakpoint",()=>{ if(j.breakpoint) state.breakpoint=mapScale(j.breakpoint); });
-  wrapSection(skipped,"zIndex",()=>{ if(j.zIndex) state.zindex=Object.entries(j.zIndex).map(([name,t])=>({name,v:num(tokVal(t))})); });
-  wrapSection(skipped,"opacity",()=>{ if(j.opacity) state.opacity=Object.entries(j.opacity).map(([name,t])=>({name,v:num(tokVal(t))})); });
-
-  // shadows (string or composite) & motion
-  wrapSection(skipped,"shadow",()=>{ if(j.shadow) state.shadow=Object.entries(j.shadow).map(([name,t])=>({name, v: shadowToCss(t)})); });
-  wrapSection(skipped,"duration",()=>{ if(j.duration) state.duration=Object.entries(j.duration).map(([name,t])=>({name, v: num(String(tokVal(t)).replace(/ms$/i,""))})); });
-  wrapSection(skipped,"easing",()=>{ if(j.easing) state.easing=Object.entries(j.easing).map(([name,t])=>({name, v: easingToCss(t)})); });
-
-  // components (rem → px, map titleBorder* back, deref shadow references)
-  wrapSection(skipped,"component.button",()=>{ if(j.component?.button) state.component.button=Object.entries(j.component.button).map(([name,b])=>({ name, minHeight:toPx(b.minHeight), minWidth:toPx(b.minWidth), padding:toPx(b.padding), radius:toPx(b.radius), shadow:shadowRefName(b.shadow) })); });
-  wrapSection(skipped,"component.card",()=>{ const c=j.component?.card; if(c) state.component.card={ radius:toPx(c.radius), gap:toPx(c.gap), paddingNoImage:toPx(c.paddingNoImage), paddingWithImage:toPx(c.paddingWithImage), borderRest:toPx(c.titleBorderRest ?? c.borderRest), borderHover:toPx(c.titleBorderHover ?? c.borderHover), shadow:shadowRefName(c.shadow) }; });
-  wrapSection(skipped,"component.input",()=>{ const c=j.component?.input; if(c) state.component.input={ minHeight:toPx(c.minHeight), padding:toPx(c.padding), radius:toPx(c.radius), borderWidth:toPx(c.borderWidth), shadow:shadowRefName(c.shadow) }; });
-
-  const parts=[];
-  if(unresolved) parts.push(`${unresolved} unresolved color reference${unresolved>1?"s":""} defaulted`);
-  if(skipped.length) parts.push(`${skipped.length} malformed section${skipped.length>1?"s":""} skipped (${skipped.join(", ")})`);
-  IMPORT_SUMMARY = parts.length ? " — "+parts.join(" · ") : "";
-}
 
 // Hard-reject characters that break DTCG reference syntax in token names (Task 5)
 function isNameField(t){
