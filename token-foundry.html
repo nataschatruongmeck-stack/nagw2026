@@ -746,34 +746,34 @@ function seedSample(){
     meta: { name:"Sample tokens", version:"1.0.0", description:"Sample design tokens with WCAG 2.1 contrast ratios recorded.", baseFontSize:16 },
     raw: [
       {name:"white",v:"#FFFFFF"},{name:"black",v:"#000000"},{name:"medium-gray",v:"#888888"},
-      {name:"dark-gray",v:"#333333"},{name:"light-gray",v:"#E6E6E6"},{name:"light-teal",v:"#C5D8DD"},
-      {name:"medium-teal",v:"#4D8898"},{name:"dark-teal",v:"#114755"},{name:"extra-dark-teal",v:"#021D24"},
-      {name:"mustard",v:"#CCA036"},{name:"faded-red",v:"#A24E4E"}
+      {name:"dark-gray",v:"#333333"},{name:"light-gray",v:"#E6E6E6"},
+      {name:"orange",v:"#DB4533"},{name:"light-orange",v:"#F4CFBB"},{name:"medium-orange",v:"#E6A586"},
+      {name:"dark-teal",v:"#223439"},{name:"medium-teal",v:"#5F7D86"},{name:"light-teal",v:"#C8D7DA"}
     ],
     action: [
       {name:"primary",bg:"dark-teal",text:"white",border:""},
-      {name:"light",bg:"light-teal",text:"dark-teal",border:""},
-      {name:"mustard",bg:"mustard",text:"black",border:""},
-      {name:"faded-red",bg:"faded-red",text:"white",border:""},
-      {name:"gray-teal",bg:"light-gray",text:"dark-teal",border:""},
-      {name:"white-teal",bg:"white",text:"dark-teal",border:"dark-teal"}
+      {name:"white-on-orange",bg:"orange",text:"white",border:""},
+      {name:"orange-on-white",bg:"white",text:"orange",border:"orange"},
+      {name:"teal-on-lt-teal",bg:"light-teal",text:"dark-teal",border:"dark-teal"},
+      {name:"dark-teal-on-gray",bg:"light-gray",text:"dark-teal",border:"dark-teal"},
+      {name:"teal-on-white",bg:"white",text:"dark-teal",border:"dark-teal"}
     ],
     status: [
-      {name:"error",fg:"white",bg:"faded-red",icon:"triangle"},
-      {name:"success",fg:"dark-teal",bg:"white",icon:"check"},
-      {name:"info",fg:"dark-teal",bg:"light-gray",icon:"info"}
+      {name:"error",fg:"orange",bg:"white",icon:"triangle"},
+      {name:"success",fg:"medium-teal",bg:"white",icon:"check"},
+      {name:"info",fg:"dark-gray",bg:"white",icon:"info"}
     ],
     surface: [
       {name:"default",     bg:"white",      text:"black"},
       {name:"gray",        bg:"light-gray", text:"black"},
       {name:"info-subtle", bg:"light-gray", text:"black"},
-      {name:"brand",       bg:"light-teal", text:"extra-dark-teal"},
+      {name:"brand",       bg:"light-teal", text:"dark-teal"},
       {name:"brand-teal",  bg:"dark-teal",  text:"white"}
     ],
     link: "dark-teal",
     focusRing: "medium-teal",
     typography: {
-      families:[{name:"primary",family:"Roboto",fallback:"sans-serif"}],
+      families:[{name:"primary",family:"nave",fallback:"sans-serif"}],
       desktop:[
         {name:"h1",size:48,lh:58,weight:700},{name:"h2",size:40,lh:50,weight:700},
         {name:"h3",size:36,lh:44,weight:700},{name:"h4",size:32,lh:40,weight:700},
