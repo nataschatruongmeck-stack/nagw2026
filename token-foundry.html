@@ -180,6 +180,8 @@
   }
   .row.scale { grid-template-columns: 30px 1.3fr 90px 60px 1fr 30px; }
   .row.btn-row { grid-template-columns: 1.1fr repeat(4, 0.8fr) 1.2fr 30px; }
+  .row.font-row { grid-template-columns: 1fr 2fr 140px 30px; align-items: end; }
+  .row.font-row .fam-hint { grid-column: 1 / -1; }
   .row .grip { color: var(--ink-faint); font-family: var(--mono); font-size: 11px; text-align: center; }
   .row .preview-out { font-family: var(--mono); font-size: 11.5px; color: var(--accent-deep); }
   .row input { padding: 6px 8px; }
@@ -251,6 +253,8 @@
   .pair .cfg .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .pair .verdict { font-family: var(--mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; text-align: center; font-weight: 700; }
   .pair .name-in { font-weight: 700; }
+  .pair .cfg-head { display: flex; gap: 8px; align-items: flex-end; }
+  .pair .cfg-head > div { flex: 1; min-width: 0; }
   .mini-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); margin-bottom: 3px; display:block; }
 
   /* Type specimen */
@@ -259,6 +263,7 @@
   .specimen .meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
   .specimen .meta label { font-size: 11px; font-weight: 600; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
   .specimen .meta input { width: 66px; padding: 4px 6px; }
+  .specimen .meta select { width: auto; max-width: 160px; padding: 4px 6px; font-family: var(--mono); font-size: 12px; }
   .specimen .name-tag { font-family: var(--mono); font-weight: 700; font-size: 11px; color: var(--accent-deep); text-transform: uppercase; }
 
   /* ---------------- Artifact (JSON) panel ---------------- */
@@ -627,6 +632,9 @@ main[tabindex="-1"]:focus-visible {
   .row.scale { grid-template-columns: 24px minmax(0, 1fr) 64px 28px; }
   .row.scale > .unit-note, .row.scale > .preview-out { display: none; }
   .row.btn-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .row.font-row { grid-template-columns: minmax(0, 1fr) 28px; }
+  .row.font-row > div:not(.fam-hint) { grid-column: 1; }
+  .row.font-row > .icon-btn { grid-column: 2; grid-row: 1; }
 }
 
 /* Narrow screens: let the nav links wrap onto a second line instead of
@@ -734,7 +742,7 @@ function px2rem(px){ const n=Number(px); if(!isFinite(n)) return "0rem"; return 
 let state = seedSample();
 
 function seedSample(){
-  return {
+  return normalizeState({
     meta: { name:"Sample tokens", version:"1.0.0", description:"Sample design tokens with WCAG 2.1 contrast ratios recorded.", baseFontSize:16 },
     raw: [
       {name:"white",v:"#FFFFFF"},{name:"black",v:"#000000"},{name:"medium-gray",v:"#888888"},
@@ -765,8 +773,7 @@ function seedSample(){
     link: "dark-teal",
     focusRing: "medium-teal",
     typography: {
-      family:"Roboto",
-      fallback:"sans-serif",
+      families:[{name:"primary",family:"Roboto",fallback:"sans-serif"}],
       desktop:[
         {name:"h1",size:48,lh:58,weight:700},{name:"h2",size:40,lh:50,weight:700},
         {name:"h3",size:36,lh:44,weight:700},{name:"h4",size:32,lh:40,weight:700},
@@ -822,7 +829,7 @@ function seedSample(){
       card: { radius:16, gap:8, paddingNoImage:32, paddingWithImage:16, borderRest:2, borderHover:3, shadow:"" },
       input: { minHeight:44, padding:12, radius:8, borderWidth:1, shadow:"" }
     }
-  };
+  });
 }
 
 /* ============================================================
@@ -831,7 +838,7 @@ function seedSample(){
 const TABS = [
   {id:"project",   label:"Project",    count:()=>null},
   {id:"colors",    label:"Colors",     count:()=>state.raw.length},
-  {id:"typography",label:"Typography", count:()=>state.typography.desktop.length+state.typography.mobile.length},
+  {id:"typography",label:"Typography", count:()=>state.typography.families.length+state.typography.desktop.length+state.typography.mobile.length},
   {id:"spacing",   label:"Spacing",    count:()=>state.spacing.length},
   {id:"radii",     label:"Radii",      count:()=>state.radii.length},
   {id:"border",    label:"Borders",    count:()=>state.border.length},
@@ -1095,7 +1102,10 @@ function actionCard(a,i){
       <span class="sm" style="color:${txHex}">action.${esc(a.name)}</span>
     </div>
     <div class="cfg">
-      <div><span class="mini-label">name</span><input type="text" class="mono name-in" data-ak="name" data-ai="${i}" value="${esc(a.name)}" aria-label="Action ${i+1} name"></div>
+      <div class="cfg-head">
+        <div><span class="mini-label">name</span><input type="text" class="mono name-in" data-ak="name" data-ai="${i}" value="${esc(a.name)}" aria-label="Action ${i+1} name"></div>
+        <button class="icon-btn" data-adel="${i}" aria-label="Remove action ${esc(a.name)}">×</button>
+      </div>
       <div class="r2">
         <div><span class="mini-label">bg</span><select data-ak="bg" data-ai="${i}" aria-label="Action ${esc(a.name)} background">${opts}</select></div>
         <div><span class="mini-label">text</span><select data-ak="text" data-ai="${i}" aria-label="Action ${esc(a.name)} text">${opts}</select></div>
@@ -1119,14 +1129,15 @@ function statusCard(s,i){
       <span class="sm" style="color:${fgHex}">icon: ${esc(s.icon)}</span>
     </div>
     <div class="cfg">
-      <div class="r2">
+      <div class="cfg-head">
         <div><span class="mini-label">name</span><input type="text" class="mono name-in" data-sk="name" data-si="${i}" value="${esc(s.name)}" aria-label="Status ${i+1} name"></div>
-        <div><span class="mini-label">icon</span><input type="text" class="mono" data-sk="icon" data-si="${i}" value="${esc(s.icon)}" aria-label="Status ${esc(s.name)} icon"></div>
+        <button class="icon-btn" data-sdel="${i}" aria-label="Remove status ${esc(s.name)}">×</button>
       </div>
       <div class="r2">
         <div><span class="mini-label">fg</span><select data-sk="fg" data-si="${i}" aria-label="Status ${esc(s.name)} foreground">${opts}</select></div>
         <div><span class="mini-label">bg</span><select data-sk="bg" data-si="${i}" aria-label="Status ${esc(s.name)} background">${opts}</select></div>
       </div>
+      <div><span class="mini-label">icon</span><input type="text" class="mono" data-sk="icon" data-si="${i}" value="${esc(s.icon)}" aria-label="Status ${esc(s.name)} icon"></div>
       <div class="verdict" style="background:${vcolor};color:${vink}">${fmtRatio(r)} · ${v}</div>
     </div>
   </div>`;
@@ -1144,7 +1155,10 @@ function surfaceCard(s,i){
       <span class="sm" style="color:${txHex}">Body text on this surface stays legible at normal size.</span>
     </div>
     <div class="cfg">
-      <div><span class="mini-label">name</span><input type="text" class="mono name-in" data-uk="name" data-ui="${i}" value="${esc(s.name)}" aria-label="Surface ${i+1} name"></div>
+      <div class="cfg-head">
+        <div><span class="mini-label">name</span><input type="text" class="mono name-in" data-uk="name" data-ui="${i}" value="${esc(s.name)}" aria-label="Surface ${i+1} name"></div>
+        <button class="icon-btn" data-udel="${i}" aria-label="Remove surface ${esc(s.name)}">×</button>
+      </div>
       <div class="r2">
         <div><span class="mini-label">surface (bg)</span><select data-uk="bg" data-ui="${i}" aria-label="Surface ${esc(s.name)} background">${opts}</select></div>
         <div><span class="mini-label">text</span><select data-uk="text" data-ui="${i}" aria-label="Surface ${esc(s.name)} text">${opts}</select></div>
@@ -1233,6 +1247,11 @@ function wireColors(){
   document.querySelectorAll("[data-ui]").forEach(el=>{
     el.addEventListener("input",()=>{ const i=+el.dataset.ui; state.surface[i][el.dataset.uk]=el.value; renderColorsLive(); announceColorChange(el); });
   });
+  [["adel","action"],["sdel","status"],["udel","surface"]].forEach(([attr,key])=>{
+    document.querySelectorAll(`[data-${attr}]`).forEach(b=>b.addEventListener("click",()=>{
+      const i=+b.dataset[attr]; deleteWithUndo(state[key], i, `Removed ${key} ${state[key][i].name}`);
+    }));
+  });
   document.querySelector("[data-addaction]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=rawNames()[0]; state.action.push({name:uniqueName("new",state.action),bg,text:bestContrastName(bg),border:""}); renderAll(); });
   document.querySelector("[data-addstatus]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.status.push({name:uniqueName("new",state.status),fg:bestContrastName(bg),bg,icon:"info"}); renderAll(); });
   document.querySelector("[data-addsurface]")?.addEventListener("click",()=>{ if(needRawColor()) return; const bg=lightestName(); state.surface.push({name:uniqueName("new",state.surface),bg,text:bestContrastName(bg)}); renderAll(); });
@@ -1279,6 +1298,7 @@ function needRawColor(){
 function exportProblems(){
   const out=[];
   missingColorRefs().forEach(m=>out.push(`${m.where} points to a missing color (${m.name})`));
+  missingFontRefs().forEach(m=>out.push(`${m.where} points to a missing font (${m.name})`));
   validateNames().dupNames.forEach(d=>out.push(`duplicate name: ${d}`));
   for(const [key,arr] of Object.entries(nameCollections())){
     if(!Array.isArray(arr)) continue;
@@ -1391,7 +1411,7 @@ function renderColorsLive(){
 const GOOGLE_FONTS = ["Public Sans","Source Sans 3","Source Serif 4","Open Sans","Noto Sans","Noto Serif","Roboto","Roboto Slab","Inter","Lato","Merriweather","Libre Franklin","IBM Plex Sans","IBM Plex Mono","Atkinson Hyperlegible","Work Sans","PT Sans","Fira Sans"];
 const APP_SANS_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 const FONT_GENERICS = ["system-ui","serif","sans-serif","monospace","ui-monospace","ui-serif","ui-sans-serif","cursive","fantasy"];
-let GF_TIMER=null, LAST_FONT_STATUS=null;
+let GF_TIMER=null, LAST_FONT_STATUS={};
 
 function famDatalist(){
   let opts = ["system-ui","Georgia","ui-monospace"].map(s=>`<option value="${esc(s)}">System stack</option>`).join("");
@@ -1399,10 +1419,17 @@ function famDatalist(){
   opts += GOOGLE_FONTS.map(f=>`<option value="${esc(f)}">Google Fonts</option>`).join("");
   return opts;
 }
+function fontNames(){ return state.typography.families.map(f=>f.name); }
+function fontByName(name){ return state.typography.families.find(f=>f.name===name); }
+function fontOptions(){ return fontNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join(""); }
+// CSS stack for a ramp row's font; a missing font previews in the system font
+function rowStack(row){ return fontStackCss(fontByName(row.font)); }
+
 // DTCG fontFamily as an array: [family, "system-ui", fallback] — no dupes, no system-ui for generics/stacks
-function fontFamilyArray(){
-  const fam=(state.typography.family||"").trim() || "system-ui";
-  const fb=(state.typography.fallback||"sans-serif").trim();
+function fontFamilyArray(f){
+  f=f||{};
+  const fam=(f.family||"").trim() || "system-ui";
+  const fb=(f.fallback||"sans-serif").trim();
   const famIsStack = fam.includes(",");
   const famIsGeneric = FONT_GENERICS.includes(fam.toLowerCase());
   const arr=[fam];
@@ -1411,8 +1438,8 @@ function fontFamilyArray(){
   return arr;
 }
 // CSS font-family value (families with whitespace get quoted; generics/stacks pass through)
-function fontStackCss(){
-  return fontFamilyArray().map(f=>{
+function fontStackCss(fam){
+  return fontFamilyArray(fam).map(f=>{
     if(f.includes(",") || FONT_GENERICS.includes(f.toLowerCase())) return f;
     return /\s/.test(f) ? `"${f}"` : f;
   }).join(", ");
@@ -1426,28 +1453,34 @@ function rampWeights(){
   ["desktop","mobile"].forEach(dev=>state.typography[dev].forEach(r=>w.add(Number(r.weight)||400)));
   return [...w].filter(n=>n>=1).sort((a,b)=>a-b);
 }
-// Inject/update a single <link> only when the family matches the curated Google list
+// One <link> per font that matches the curated Google list; other names never inject anything
 function loadGoogleFont(){
-  const match=googleMatch(state.typography.family);
-  const existing=document.getElementById("gfLink");
-  if(!match){ return; }   // never inject for non-matching names
   const weights=rampWeights().join(";") || "400";
-  const href=`https://fonts.googleapis.com/css2?family=${match.replace(/ /g,"+")}:wght@${weights}&display=swap`;
-  let link=existing;
-  if(!link){ link=document.createElement("link"); link.id="gfLink"; link.rel="stylesheet"; document.head.appendChild(link); }
-  if(link.href!==href){
-    link.onload=()=>updateFontStatus();
-    link.onerror=()=>updateFontStatus();   // offline: fall through to the fallback hint, no error
-    link.href=href;
-  }
+  const matches=new Set(state.typography.families.map(f=>googleMatch(f.family)).filter(Boolean));
+  matches.forEach(match=>{
+    const id="gfLink-"+match.replace(/\s+/g,"-");
+    const href=`https://fonts.googleapis.com/css2?family=${match.replace(/ /g,"+")}:wght@${weights}&display=swap`;
+    let link=document.getElementById(id);
+    if(!link){ link=document.createElement("link"); link.id=id; link.rel="stylesheet"; document.head.appendChild(link); }
+    if(link.href!==href){
+      link.onload=()=>updateAllFontStatus();
+      link.onerror=()=>updateAllFontStatus();   // offline: fall through to the fallback hint, no error
+      link.href=href;
+    }
+  });
 }
 function applySpecimenFont(){
-  const stack=fontStackCss();
-  document.querySelectorAll(".specimen .demo").forEach(d=>{ d.style.fontFamily=stack; });
+  document.querySelectorAll(".specimen").forEach(sp=>{
+    const row=state.typography[sp.dataset.typedev][+sp.dataset.typei];
+    const d=sp.querySelector(".demo");
+    if(row && d) d.style.fontFamily=rowStack(row);
+  });
 }
-async function updateFontStatus(){
-  const name=(state.typography.family||"").trim();
-  const el=document.getElementById("fam-status");
+function updateAllFontStatus(quiet){ state.typography.families.forEach((f,i)=>updateFontStatus(i,quiet)); }
+async function updateFontStatus(i, quiet){
+  const f=state.typography.families[i];
+  if(!f) return;
+  const name=(f.family||"").trim();
   const isSystem = !name || FONT_GENERICS.includes(name.toLowerCase()) || name.includes(",");
   let real;
   if(isSystem){ real=true; }
@@ -1459,9 +1492,12 @@ async function updateFontStatus(){
                    : `Font not available in this browser — specimens are showing a fallback`;
   const tone = real ? "pass" : "large";
   const mark = real ? "●" : "▲";
+  // looked up after the await: the row may have moved or been removed meanwhile
+  const el=document.getElementById(`fam-status-${state.typography.families.indexOf(f)}`);
   if(el) el.innerHTML=`<b style="color:var(--${tone})">${mark}</b> ${esc(msg)}`;
   applySpecimenFont();
-  if(msg!==LAST_FONT_STATUS){ LAST_FONT_STATUS=msg; announce(msg); }
+  const key=f.name+"|"+name;
+  if(msg!==LAST_FONT_STATUS[key]){ LAST_FONT_STATUS[key]=msg; if(!quiet) announce(`${f.name}: ${msg}`); }
 }
 
 /* ---------- Typography ---------- */
@@ -1469,61 +1505,82 @@ function tabTypography(){
   const t=state.typography;
   const ramp=(device)=> t[device].map((r,i)=>`
     <div class="specimen" data-typedev="${device}" data-typei="${i}">
-      <div class="demo" style="font-family:${esc(fontStackCss())};font-size:${Math.min(r.size,40)}px;line-height:1.1;font-weight:${r.weight}">
+      <div class="demo" style="font-family:${esc(rowStack(r))};font-size:${Math.min(r.size,40)}px;line-height:1.1;font-weight:${r.weight}">
         <span class="name-tag">${esc(r.name)}</span> The quick brown fox
       </div>
       <div class="meta">
         <label>name <input type="text" class="mono" data-tk="name" value="${esc(r.name)}"></label>
+        <label>font <select data-tk="font">${fontOptions()}</select></label>
         <label>size <input type="number" data-tk="size" value="${esc(r.size)}"><span class="unit-note">px → ${px2rem(r.size)}</span></label>
         <label>line-h <input type="number" data-tk="lh" value="${esc(r.lh)}"><span class="unit-note">px → ${px2rem(r.lh)}</span></label>
         <label>weight <input type="number" step="100" data-tk="weight" value="${esc(r.weight)}"></label>
         <button class="icon-btn" data-tdel aria-label="Remove ${device} style ${esc(r.name)}">×</button>
       </div>
     </div>`).join("");
+  const fbOpts=["sans-serif","serif","monospace"].map(v=>`<option value="${v}">${v}</option>`).join("");
+  const fontRows=t.families.map((f,i)=>`
+    <div class="row font-row">
+      <div><span class="mini-label">name</span><input type="text" class="mono" data-fk="name" data-fi="${i}" value="${esc(f.name)}" aria-label="Font ${i+1} name"></div>
+      <div><span class="mini-label">family</span><input type="text" list="famList" autocomplete="off" data-fk="family" data-fi="${i}" value="${esc(f.family)}" aria-label="Font ${esc(f.name)} family"></div>
+      <div><span class="mini-label">fallback</span><select data-fk="fallback" data-fi="${i}" aria-label="Font ${esc(f.name)} fallback">${fbOpts}</select></div>
+      <button class="icon-btn" data-fdel="${i}" aria-label="Remove font ${esc(f.name)}">×</button>
+      <div class="hint fam-hint" id="fam-status-${i}"></div>
+    </div>`).join("");
   return `<div class="panel-head"><div class="eyebrow">type ramp</div>
-    <h2>Typography</h2><p>Sizes and line heights authored in px, exported in rem. Weights as numeric font-weights. Two breakpoint ramps: desktop and mobile.</p></div>
-  <div class="card"><div class="grid-2">
-    <div>
-      <label class="field" for="fam">Font family</label>
-      <input id="fam" type="text" list="famList" autocomplete="off" value="${esc(t.family)}">
-      <datalist id="famList">${famDatalist()}</datalist>
-      <div class="hint" id="fam-status" style="margin-top:6px"></div>
-    </div>
-    <div>
-      <label class="field" for="fam-fallback">Fallback</label>
-      <select id="fam-fallback">
-        <option value="sans-serif">sans-serif</option>
-        <option value="serif">serif</option>
-        <option value="monospace">monospace</option>
-      </select>
-      <div class="hint" style="margin-top:6px">Type any family (self-hosted brand fonts too) or pick a Google Font to preview. Choosing a Google Font sends a request to fonts.googleapis.com to load it; nothing is requested until you change this field. Body text ≥ 24px (or ≥ 18.66px bold) counts as “large text” for WCAG contrast.</div>
-    </div>
-  </div></div>
+    <h2>Typography</h2><p>Sizes and line heights authored in px, exported in rem. Weights as numeric font-weights. Two breakpoint ramps: desktop and mobile. Each style picks one of the fonts below.</p></div>
+  <div class="card"><h3>Fonts</h3><p class="sub">Name each font by its role (<code>primary</code>, <code>display</code>, <code>mono</code>), then choose it per style in the ramps. Type any family (self-hosted brand fonts too) or pick a Google Font to preview. Choosing a Google Font sends a request to fonts.googleapis.com to load it; nothing is requested until you change a family field. Body text ≥ 24px (or ≥ 18.66px bold) counts as “large text” for WCAG contrast.</p>
+    <datalist id="famList">${famDatalist()}</datalist>
+    <div class="rows" data-fontrows>${fontRows}</div>
+    <button class="add-row" data-addfont>+ Add font</button>
+  </div>
   <div class="card"><h3>Desktop ramp</h3><div style="margin-top:10px">${ramp("desktop")}</div>
     <button class="add-row" data-addtype="desktop">+ Add desktop style</button></div>
   <div class="card"><h3>Mobile ramp</h3><div style="margin-top:10px">${ramp("mobile")}</div>
     <button class="add-row" data-addtype="mobile">+ Add mobile style</button></div>`;
 }
 function wireTypography(){
-  const fam=document.getElementById("fam");
-  if(fam) fam.addEventListener("input",()=>{
-    state.typography.family=fam.value; renderArtifact(); applySpecimenFont();
-    clearTimeout(GF_TIMER);
-    GF_TIMER=setTimeout(()=>{ loadGoogleFont(); updateFontStatus(); }, 400);   // debounce network + check
+  const fams=state.typography.families;
+  document.querySelectorAll("[data-fi]").forEach(el=>{
+    const i=+el.dataset.fi, k=el.dataset.fk;
+    if(el.tagName==="SELECT") el.value=fams[i][k]||"sans-serif";
+    el.addEventListener("input",()=>{
+      const old=fams[i][k];
+      fams[i][k]=el.value;
+      if(k==="name"){ renameFontRefs(old, el.value); refreshFontSelects(); }
+      renderArtifact(); applySpecimenFont();
+      if(k==="family"){
+        clearTimeout(GF_TIMER);
+        GF_TIMER=setTimeout(()=>{ loadGoogleFont(); updateFontStatus(i); }, 400);   // debounce network + check
+      }
+    });
   });
-  const fb=document.getElementById("fam-fallback");
-  if(fb){ fb.value=state.typography.fallback||"sans-serif"; fb.addEventListener("change",()=>{ state.typography.fallback=fb.value; renderArtifact(); applySpecimenFont(); }); }
+  document.querySelectorAll("[data-fdel]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.fdel, name=fams[i].name, refs=countFontRefs(name);
+    deleteWithUndo(fams, i, `Removed font ${name}${refs?` — ${refs} style${refs>1?"s use":" uses"} it. Pick a new font for ${refs>1?"them":"it"} before you export`:""}`);
+  }));
+  document.querySelector("[data-addfont]")?.addEventListener("click",()=>{
+    fams.push({name:uniqueName("new",fams),family:"system-ui",fallback:"sans-serif"}); renderAll();
+  });
+  refreshFontSelects();
   // initial: report status only. The Google Fonts request waits for the user to
-  // edit the field, so opening this tab makes no third-party request.
-  updateFontStatus();
+  // edit a family field, so opening this tab makes no third-party request.
+  updateAllFontStatus(true);
   document.querySelectorAll("[data-typedev]").forEach(spec=>{
     const dev=spec.dataset.typedev, i=+spec.dataset.typei;
+    spec.querySelector('[data-tk="font"]')?.addEventListener("change",e=>{
+      const row=state.typography[dev][i];
+      row.font=e.target.value;
+      applySpecimenFont(); renderArtifact();
+      loadGoogleFont();
+      const f=fontByName(row.font);
+      announce(`${dev} ${row.name} now uses ${row.font}${f?`, ${f.family}`:""}.`);
+    });
     spec.querySelectorAll("input").forEach(inp=>{
       inp.addEventListener("input",()=>{
         const k=inp.dataset.tk;
         state.typography[dev][i][k] = (k==="name")? inp.value : Number(inp.value);
         renderArtifact();
-        if(k==="weight"){ clearTimeout(GF_TIMER); GF_TIMER=setTimeout(()=>{ loadGoogleFont(); updateFontStatus(); }, 400); } // re-request with new weight set
+        if(k==="weight"){ clearTimeout(GF_TIMER); GF_TIMER=setTimeout(()=>{ loadGoogleFont(); updateAllFontStatus(); }, 400); } // re-request with new weight set
         if(k!=="name" && k!=="weight"){ // update rem note + demo without losing focus
           const note=inp.parentElement.querySelector(".unit-note");
           if(note) note.textContent = "px → "+px2rem(inp.value);
@@ -1533,8 +1590,33 @@ function wireTypography(){
     spec.querySelector("[data-tdel]")?.addEventListener("click",()=>{ deleteWithUndo(state.typography[dev], i, `Removed ${dev} ${state.typography[dev][i].name}`); });
   });
   document.querySelectorAll("[data-addtype]").forEach(b=>b.addEventListener("click",()=>{
-    state.typography[b.dataset.addtype].push({name:uniqueName("new",state.typography[b.dataset.addtype]),size:16,lh:24,weight:400}); renderAll();
+    state.typography[b.dataset.addtype].push({name:uniqueName("new",state.typography[b.dataset.addtype]),size:16,lh:24,weight:400,font:fontNames()[0]||""}); renderAll();
   }));
+}
+// Rebuild each style's font dropdown in place, so renaming a font doesn't steal focus
+function refreshFontSelects(){
+  const opts=fontOptions();
+  document.querySelectorAll(".specimen").forEach(sp=>{
+    const sel=sp.querySelector('[data-tk="font"]');
+    const row=state.typography[sp.dataset.typedev][+sp.dataset.typei];
+    if(sel && row){ sel.innerHTML=opts; setSelectValue(sel,row.font); }
+  });
+}
+/* Renaming a font renames every style that uses it, unless another font
+   still carries the old name (same rule as colors). */
+function renameFontRefs(oldName, newName){
+  if(!oldName || oldName===newName || fontByName(oldName)) return;
+  ["desktop","mobile"].forEach(dev=>state.typography[dev].forEach(r=>{ if(r.font===oldName) r.font=newName; }));
+}
+function countFontRefs(name){
+  return ["desktop","mobile"].reduce((n,dev)=>n+state.typography[dev].filter(r=>r.font===name).length,0);
+}
+function missingFontRefs(){
+  const names=new Set(fontNames()), out=[];
+  ["desktop","mobile"].forEach(dev=>state.typography[dev].forEach(r=>{
+    if(!names.has(r.font)) out.push({where:`typography.${dev}.${r.name}.fontFamily`,name:r.font||"none"});
+  }));
+  return out;
 }
 
 /* ---------- Motion ---------- */
@@ -1630,7 +1712,8 @@ function componentPreview(){
   }).join("");
   const cardBg=rawHex(surf.bg), cardText=rawHex(surf.text);
   const cardShadow = shadowVal(c.card.shadow);
-  const stack = fontStackCss();
+  const bodyRow = state.typography.desktop.find(r=>r.name==="body");
+  const stack = bodyRow ? rowStack(bodyRow) : fontStackCss(state.typography.families[0]);
   return `<div class="card" id="compPreview"><h3>Live preview</h3><p class="sub">Rendered at the exact dimensions and semantic colors below — edit any value and watch it move.</p>
     <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;font-family:${stack}">
 
@@ -1742,7 +1825,7 @@ function buildTokens(){
     "$schema":"https://tr.designtokens.org/format/",
     "$description": `${state.meta.name} design tokens. Version ${state.meta.version}. ${state.meta.description}`,
     "color": { "raw": {}, "action": {}, "status": {}, "surface": {}, "link": {}, "focus": {} },
-    "typography": { "family": { "$type":"fontFamily", "$value": fontFamilyArray() } },
+    "typography": { "family": {} },
     "spacing": {}, "radius": {}, "borderWidth": {}, "shadow": {},
     "duration": {}, "easing": {}, "breakpoint": {}, "zIndex": {}, "opacity": {},
     "component": { "button": {}, "card": {}, "input": {} }
@@ -1795,11 +1878,15 @@ function buildTokens(){
   out.color.focus={ "ring-color":{ "$value":`{color.raw.${state.focusRing}}` },
     "$extensions":{ "io.github.nataschatruongmeck-stack.contrast":{ "ratio":Math.round(frR*100)/100, "passes": frR>=3?["1.4.11"]:[], "note":"Focus indicator vs white; needs ≥3:1 (SC 1.4.11)." } } };
 
-  // typography ramps
+  // font families, then ramps that alias into them
+  state.typography.families.forEach(f=>{
+    out.typography.family[f.name]={ "$type":"fontFamily", "$value": fontFamilyArray(f) };
+  });
   ["desktop","mobile"].forEach(dev=>{
     out.typography[dev]={};
     state.typography[dev].forEach(r=>{
       out.typography[dev][r.name]={
+        "fontFamily":{ "$value": `{typography.family.${r.font}}` },
         "fontSize":  { "$type":"dimension", "$value": rem(r.size) },
         "lineHeight":{ "$type":"dimension", "$value": rem(r.lh) },
         "fontWeight":{ "$type":"fontWeight","$value": Number(r.weight) }
@@ -1893,7 +1980,7 @@ let ANNOUNCED_DUPS=new Set();
 function nameCollections(){
   return {
     "raw":state.raw, "action":state.action, "status":state.status, "surface":state.surface,
-    "typography.desktop":state.typography.desktop, "typography.mobile":state.typography.mobile,
+    "typography.family":state.typography.families, "typography.desktop":state.typography.desktop, "typography.mobile":state.typography.mobile,
     "spacing":state.spacing, "radii":state.radii, "border":state.border, "shadow":state.shadow,
     "duration":state.duration, "easing":state.easing, "breakpoint":state.breakpoint,
     "zindex":state.zindex, "opacity":state.opacity, "component.button":state.component.button
@@ -1928,6 +2015,7 @@ function applyNameFlags(v){
   const sc=document.querySelector("[data-scale]");
   if(sc) sc.querySelectorAll('[data-k="name"]').forEach(inp=>flag(inp,+inp.dataset.i,sc.dataset.scale));
   document.querySelectorAll(".specimen").forEach(sp=>{ const inp=sp.querySelector('[data-tk="name"]'); if(inp) flag(inp,+sp.dataset.typei,"typography."+sp.dataset.typedev); });
+  document.querySelectorAll('[data-fk="name"][data-fi]').forEach(inp=>flag(inp,+inp.dataset.fi,"typography.family"));
   document.querySelectorAll('[data-mk="name"]').forEach(inp=>flag(inp,+inp.dataset.mi,inp.dataset.md));
   document.querySelectorAll('[data-bk="name"][data-bi]').forEach(inp=>flag(inp,+inp.dataset.bi,"component.button"));
 }
@@ -2020,10 +2108,16 @@ function normalizeState(s){
   s.meta = { name:"", version:"0.1.0", description:"", baseFontSize:16, ...(s.meta||{}) };
   ["raw","action","status","surface","spacing","radii","border","shadow","duration","easing","breakpoint","zindex","opacity"]
     .forEach(k=>{ if(!Array.isArray(s[k])) s[k]=[]; });
-  if(!s.typography) s.typography={family:"system-ui",fallback:"sans-serif",desktop:[],mobile:[]};
-  if(!s.typography.fallback) s.typography.fallback="sans-serif";
+  if(!s.typography) s.typography={};
+  // Sessions saved before multiple fonts had one family + fallback; it becomes the first font.
+  if(!Array.isArray(s.typography.families)){
+    s.typography.families=[{name:"primary",family:s.typography.family||"system-ui",fallback:s.typography.fallback||"sans-serif"}];
+  }
+  delete s.typography.family; delete s.typography.fallback;
   if(!Array.isArray(s.typography.desktop)) s.typography.desktop=[];
   if(!Array.isArray(s.typography.mobile)) s.typography.mobile=[];
+  const firstFont=s.typography.families[0]?.name||"";
+  ["desktop","mobile"].forEach(dev=>s.typography[dev].forEach(r=>{ if(r.font==null) r.font=firstFont; }));
   if(!s.component) s.component={};
   if(!Array.isArray(s.component.button)) s.component.button=[];
   if(!s.component.card) s.component.card={radius:0,gap:0,paddingNoImage:0,paddingWithImage:0,borderRest:0,borderHover:0,shadow:""};
@@ -2219,13 +2313,16 @@ function buildInstructions(){
   L.push(`deref(t.color.action.primary.bg.$value); // -> "${primary?rawHex(primary.bg):"#…"}"`);
   L.push("```",``);
   L.push(`## Typography`,``);
-  L.push(`Font family: **${state.typography.family}** (exported as the stack \`${fontFamilyArray().join(", ")}\`). Two ramps ship: \`typography.desktop\` and \`typography.mobile\`.`,``);
+  L.push(`Fonts live under \`typography.family\`; each style's \`fontFamily\` is a reference to one of them. Two ramps ship: \`typography.desktop\` and \`typography.mobile\`.`,``);
+  state.typography.families.forEach(f=>L.push(`- \`typography.family.${f.name}\` — **${f.family}** (exported as the stack \`${fontFamilyArray(f).join(", ")}\`)`));
+  L.push(``);
   L.push(`> The token only *names* the font — your site is responsible for loading it. Self-hosted \`@font-face\` is recommended for production; the Google Fonts link in the builder is a preview convenience only and is never required at runtime.`,``);
-  L.push(`| Style | Desktop size / line-height | Mobile size / line-height | Weight |`);
-  L.push(`|---|---|---|---|`);
+  L.push(`| Style | Font | Desktop size / line-height | Mobile size / line-height | Weight |`);
+  L.push(`|---|---|---|---|---|`);
   state.typography.desktop.forEach(d=>{
     const mob=state.typography.mobile.find(x=>x.name===d.name);
-    L.push(`| ${d.name} | ${px2rem(d.size)} / ${px2rem(d.lh)} | ${mob?px2rem(mob.size)+" / "+px2rem(mob.lh):"—"} | ${d.weight} |`);
+    const font = mob && mob.font!==d.font ? `${d.font} (mobile: ${mob.font})` : d.font;
+    L.push(`| ${d.name} | ${font} | ${px2rem(d.size)} / ${px2rem(d.lh)} | ${mob?px2rem(mob.size)+" / "+px2rem(mob.lh):"—"} | ${d.weight} |`);
   });
   L.push(``,`## Components`,``);
   L.push(`Target size is not checked by Token Foundry — confirm button dimensions yourself. 44×44px is a common best-practice target (WCAG 2.1 SC 2.5.5, Level AAA); WCAG 2.2 SC 2.5.8 sets a 24×24px minimum at Level AA. Card, input, and button dimensions are under \`component.*\` in rem. Apply \`focus.ring-color\` as a visible 2px focus outline with a 2px offset on every interactive element.`,``);
@@ -2271,7 +2368,7 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
     status:[],
     surface:[{name:"default",bg:"paper",text:"ink"},{name:"brand",bg:"brand",text:"paper"}],
     link:"brand", focusRing:"ink",
-    typography:{family:"system-ui",fallback:"sans-serif",desktop:[{name:"h1",size:40,lh:48,weight:700},{name:"body",size:16,lh:24,weight:400}],mobile:[{name:"h1",size:32,lh:40,weight:700},{name:"body",size:16,lh:24,weight:400}]},
+    typography:{families:[{name:"primary",family:"system-ui",fallback:"sans-serif"}],desktop:[{name:"h1",size:40,lh:48,weight:700},{name:"body",size:16,lh:24,weight:400}],mobile:[{name:"h1",size:32,lh:40,weight:700},{name:"body",size:16,lh:24,weight:400}]},
     spacing:[{name:"1",v:4},{name:"2",v:8},{name:"3",v:16},{name:"4",v:24},{name:"5",v:32}],
     radii:[{name:"sm",v:6},{name:"md",v:10},{name:"full",v:9999}],
     border:[{name:"hairline",v:1},{name:"thick",v:2}],
@@ -2284,13 +2381,13 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
       card:{radius:12,gap:8,paddingNoImage:24,paddingWithImage:16,borderRest:1,borderHover:2,shadow:""},
       input:{minHeight:44,padding:12,radius:8,borderWidth:1,shadow:""} }
   };
-  replaceStateWithUndo(blank, "Cleared to a blank starter");
+  replaceStateWithUndo(normalizeState(blank), "Cleared to a blank starter");
 });
 
 // Hard-reject characters that break DTCG reference syntax in token names (Task 5)
 function isNameField(t){
   const d=t&&t.dataset; if(!d) return false;
-  return d.ck==="name"||d.ak==="name"||d.sk==="name"||d.uk==="name"||d.k==="name"||d.tk==="name"||d.mk==="name"||d.bk==="name";
+  return d.ck==="name"||d.ak==="name"||d.sk==="name"||d.uk==="name"||d.k==="name"||d.tk==="name"||d.mk==="name"||d.bk==="name"||d.fk==="name";
 }
 document.addEventListener("beforeinput",(e)=>{
   if(!isNameField(e.target)) return;
