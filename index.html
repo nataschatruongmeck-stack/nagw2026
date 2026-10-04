@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Natascha Truong — tools for design systems</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<meta name="description" content="Companion site for The Skeptic's Guide to AI-Assisted Web Design (NAGW 2026): design token basics, a WCAG contrast matrix, a design token builder, and a Figma-first workflow guide.">
+<meta name="description" content="Companion site for The Skeptic's Guide to AI-Assisted Web Design (NAGW 2026): design token basics, a WCAG contrast matrix, a design token builder, and a guide to four AI-assisted design workflows.">
 <style>
 /* ============================================================
    Palette and structure follow the Figma-first workflow guide.
@@ -226,6 +226,8 @@ h1 {
 
 .deck.talk { margin-top: 12px; color: var(--nt-on-ink); }
 .deck.talk cite { font-style: italic; }
+.deck.talk a { color: var(--nt-on-ink-lift); text-underline-offset: 3px; }
+.deck.talk a:focus-visible { outline: 2px solid var(--nt-on-ink-lift); outline-offset: 3px; border-radius: 2px; }
 
 /* ---------- resources ---------- */
 .resources { padding: 0 0 clamp(40px, 7vw, 72px); }
@@ -324,7 +326,8 @@ h1 {
       <li><a href="design-tokens.html">Design Tokens</a></li>
       <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
       <li><a href="token-foundry.html">Token Foundry</a></li>
-      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+      <li><a href="figma-first-workflow-guide.html">Workflow Guide</a></li>
+      <li><a href="#resources">Resources</a></li>
     </ul>
   </nav>
 </div>
@@ -334,7 +337,7 @@ h1 {
     <p class="eyebrow">NAGW 2026 · Companion site</p>
     <h1>Three tools for design systems.</h1>
     <p class="deck">Use these tools to check color contrast, create a design token system, and follow a human-directed AI-assisted design workflow.</p>
-    <p class="deck talk">Companion site for <cite>The Skeptic's Guide to AI-Assisted Web Design</cite>, presented by Natascha Truong at NAGW 2026.</p>
+    <p class="deck talk">Companion site for <cite>The Skeptic's Guide to AI-Assisted Web Design</cite>, presented by Natascha Truong at NAGW 2026. <a href="https://docs.google.com/presentation/d/1DkTElMLUlsVp75fnAb9yvy4Pplj4ccLrl5BSuU6-cDQ/edit?usp=sharing">View the presentation slides</a>.</p>
     <div class="masthead-meta">
       <span>Contrast checks · WCAG 2.1</span>
       <span>No build step</span>
@@ -378,8 +381,8 @@ h1 {
       <a class="entry" href="figma-first-workflow-guide.html">
         <span class="readout" aria-hidden="true">1:1<span class="kind">Guide</span></span>
         <span>
-          <h2>Figma-first Workflow</h2>
-          <p>Overall steps to go from Figma to final code, with four options for workflow.</p>
+          <h2>Workflow Guide</h2>
+          <p>The AI tools from the talk, Claude Code tips, four design-to-code workflows, and the checks to run before you ship.</p>
         </span>
         <span class="arrow" aria-hidden="true">→</span>
       </a>
@@ -391,10 +394,17 @@ h1 {
       <p class="resources-note">These links go to other sites. Their content can change.</p>
       <div class="resource-groups">
         <div>
+          <h3>The presentation</h3>
+          <ul>
+            <li><a href="https://docs.google.com/presentation/d/1DkTElMLUlsVp75fnAb9yvy4Pplj4ccLrl5BSuU6-cDQ/edit?usp=sharing">The Skeptic's Guide to AI-Assisted Web Design (Google Slides)</a></li>
+          </ul>
+        </div>
+        <div>
           <h3>Design tokens</h3>
           <ul>
             <li><a href="https://www.designtokens.org/">Design Tokens Community Group</a></li>
             <li><a href="https://www.designtokens.org/tr/2025.10/format/">Design Tokens Format Module (2025.10)</a></li>
+            <li><a href="https://www.figma.com/resource-library/design-tokens/">Figma: How to sync design and code with design tokens</a></li>
             <li><a href="https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma">Figma: Guide to variables</a></li>
             <li><a href="https://styledictionary.com/">Style Dictionary</a></li>
           </ul>
@@ -405,6 +415,22 @@ h1 {
             <li><a href="https://www.w3.org/TR/WCAG21/">WCAG 2.1</a></li>
             <li><a href="https://www.w3.org/WAI/WCAG21/quickref/">How to Meet WCAG (Quick Reference)</a></li>
             <li><a href="https://www.ada.gov/resources/2024-03-08-web-rule/">ADA.gov: Title II web accessibility rule</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Security</h3>
+          <ul>
+            <li><a href="https://best.openssf.org/Security-Focused-Guide-for-AI-Code-Assistant-Instructions.html">OpenSSF: Security-Focused Guide for AI Code Assistant Instructions</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/index.html">OWASP Cheat Sheet Series</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Claude learning</h3>
+          <ul>
+            <li><a href="https://academy.claude.com/">Claude Academy</a></li>
+            <li><a href="https://academy.claude.com/courses/introduction-to-agent-skills">Introduction to agent skills</a></li>
+            <li><a href="https://academy.claude.com/products/code">Claude Code tutorials and course</a></li>
+            <li><a href="https://academy.claude.com/tutorials/using-claude-design-for-prototypes-and-ux">Using Claude Design for prototypes and UX</a></li>
           </ul>
         </div>
         <div>
@@ -424,7 +450,7 @@ h1 {
 
 <footer class="colophon-wrap">
   <div class="shell">
-    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. You can use any AI tool that can write code. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
     <div class="colophon">
       <span>© 2026 Natascha Truong. All rights reserved.</span>
       <span>Every page is one file, with two self-hosted fonts — no CDN, and no third-party requests unless you choose a Google Font to preview in Token Foundry.</span>

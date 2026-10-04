@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Figma-first workflow — design system to shipped code</title>
+<title>Workflow guide — design system to shipped code</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="description" content="A step-by-step guide to moving a design from Figma through Claude Design and Claude Code without losing the design system.">
 <style>
@@ -172,6 +172,7 @@ code {
 .skeptic .checklist { margin-top: 0; }
 
 .more-intro { max-width: 42rem; font-size: 0.9375rem; margin-bottom: var(--s5); }
+.path p { font-size: 0.9375rem; }
 
 /* ---------- prerequisite stop-block ---------- */
 
@@ -194,6 +195,7 @@ code {
 /* ---------- phases ---------- */
 
 .phase { margin-bottom: var(--s8); }
+.phase-first { margin-top: var(--s7); }
 
 .phase-head {
   display: flex;
@@ -619,7 +621,8 @@ h2, h3 { font-weight: 600; }
       <li><a href="design-tokens.html">Design Tokens</a></li>
       <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
       <li><a href="token-foundry.html">Token Foundry</a></li>
-      <li><a href="figma-first-workflow-guide.html" aria-current="page">Figma-first Workflow</a></li>
+      <li><a href="figma-first-workflow-guide.html" aria-current="page">Workflow Guide</a></li>
+      <li><a href="index.html#resources">Resources</a></li>
     </ul>
   </nav>
 </div>
@@ -627,13 +630,13 @@ h2, h3 { font-weight: 600; }
 
 <header class="masthead">
   <div class="shell">
-    <p class="eyebrow">Figma-first workflow</p>
+    <p class="eyebrow">Workflow guide</p>
     <h1>A Skeptic's Guide</h1>
-    <p class="deck">Your final design must conform to your design token system. The steps below show a Figma to AI workflow that maintains your design governance and human oversight.</p>
+    <p class="deck">Your final design must conform to your design token system. This guide covers the AI tools from the talk and four workflows from design to code, each one keeping your design governance and human oversight in place.</p>
     <div class="masthead-meta">
-      <span>Figma → Claude Design → Claude Code / Figma → Claude Code</span>
+      <span>Four workflows · Claude Design, Figma, Claude Code</span>
       <span>WCAG 2.1 AA</span>
-      <span>Read time ~6 min</span>
+      <span>Read time ~8 min</span>
     </div>
   </div>
 </header>
@@ -648,9 +651,97 @@ h2, h3 { font-weight: 600; }
         <li>Research and learn about the limitations of AI.</li>
         <li>Think about what you feel comfortable with, professionally and personally.</li>
         <li>Follow your organization's AI governance.</li>
+        <li>Don't let AI create your first draft.</li>
         <li>Be the director of your AI tool.</li>
         <li>Always test and check what AI creates.</li>
       </ul>
+    </section>
+  </div>
+
+  <!-- ============ AI TOOLS ============ -->
+  <div class="shell">
+    <section class="phase phase-first" aria-labelledby="tools">
+      <div class="phase-head">
+        <span class="phase-num">Tools</span>
+        <h2 id="tools">AI tools</h2>
+        <span class="phase-note">The tools I demonstrate</span>
+      </div>
+
+      <div class="fork">
+        <article class="path">
+          <span class="tag">Design</span>
+          <h3>Claude Design</h3>
+          <p>Explore and iterate on design options quickly, then hand the design off to Claude Code.</p>
+        </article>
+        <article class="path">
+          <span class="tag">Connector</span>
+          <h3>Figma MCP server</h3>
+          <p>MCP stands for Model Context Protocol. The Figma MCP server connects Figma to Claude Code, so Claude Code can read your Figma designs and write to your Figma files.</p>
+        </article>
+        <article class="path">
+          <span class="tag">Code</span>
+          <h3>Claude Code</h3>
+          <p>Installed on your computer and used in the terminal. Your projects are saved locally and on GitHub.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ CLAUDE CODE TIPS ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="tips">
+      <div class="phase-head">
+        <span class="phase-num">Tips</span>
+        <h2 id="tips">Claude Code tips</h2>
+      </div>
+      <ul class="checklist">
+        <li>Use Claude Code to add your design tokens to Figma.</li>
+        <li>Save your favorite prompts to a text file.</li>
+        <li>Tell Claude Code to save your favorite specifications to a notes file, saved as a Markdown (.md) file.</li>
+        <li>Save every file you want Claude Code to use in your project folder. For example: APIs, design token files, and notes from previous sessions.</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ============ STEP 1: PICK A WORKFLOW ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="p1">
+      <div class="phase-head">
+        <span class="phase-num">Step 1</span>
+        <h2 id="p1">Pick a workflow</h2>
+        <span class="phase-note">The two workflows from the talk</span>
+      </div>
+
+      <div class="fork">
+
+        <article class="path">
+          <span class="tag">Workflow 1</span>
+          <h3>Claude Design → Claude Code</h3>
+          <p class="path-when">Use this workflow when you don't have Figma or a Figma Pro account, or when you want to explore ideas first and then edit.</p>
+          <ol>
+            <li><strong>Ask Claude Design to save the standards from your JSON file, so new designs follow them. (Claude Design calls these saved standards a &ldquo;design system.&rdquo;)</strong></li>
+            <li><strong>Explore design options using Claude Design.</strong></li>
+            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
+            <li><strong>Point Claude Code to your handoff file and your Design token JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
+        <article class="path">
+          <span class="tag">Workflow 2</span>
+          <h3>Figma → Claude Code</h3>
+          <p class="path-when">Use this workflow when you want to create the design in Figma and then code it in Claude Code, and you want control over the entire design process.</p>
+          <ol>
+            <li><strong>Design in Figma (Step 2).</strong></li>
+            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
+            <li><strong>Point Claude Code to your Design Tokens JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
+      </div>
     </section>
   </div>
 
@@ -658,17 +749,17 @@ h2, h3 { font-weight: 600; }
   <div class="shell">
     <section class="stop" aria-labelledby="prereq-title">
       <h2 id="prereq-title">Note:</h2>
-      <p>This guide assumes your tokens are already in Figma as Variables, imported <em>from</em> <code>tokens.json</code> rather than recreated by hand. At the time of writing that usually means a plugin that reads the Design Tokens (DTCG) JSON format; Figma has announced native import, but check whether it is available on your plan. You can also load them with Claude Code if you have MCP configured in Figma. If your Figma styles were built by hand instead of using your design token file, your standards can drift.</p>
+      <p>Before you design in Figma, your tokens should already be in Figma as Variables, imported <em>from</em> <code>tokens.json</code> rather than recreated by hand. At the time of writing that usually means a plugin that reads the Design Tokens (DTCG) JSON format; Figma has announced native import, but check whether it is available on your plan. You can also load them with Claude Code if you have MCP configured in Figma. If your Figma styles were built by hand instead of using your design token file, your standards can drift.</p>
     </section>
   </div>
 
-  <!-- ============ STEP 1 ============ -->
+  <!-- ============ STEP 2: DESIGN IN FIGMA ============ -->
   <div class="shell">
-    <section class="phase" aria-labelledby="p1">
+    <section class="phase" aria-labelledby="p2">
       <div class="phase-head">
-        <span class="phase-num">Step 1</span>
-        <h2 id="p1">Design in Figma</h2>
-        <span class="phase-note">You are the art director</span>
+        <span class="phase-num">Step 2</span>
+        <h2 id="p2">Design in Figma</h2>
+        <span class="phase-note">Workflows 2, 3, and 4 · You are the art director</span>
       </div>
 
       <div class="step">
@@ -736,35 +827,116 @@ h2, h3 { font-weight: 600; }
     </section>
   </div>
 
-  <!-- ============ STEP 2 ============ -->
+  <!-- ============ STEP 3: TEST AND VERIFY ============ -->
   <div class="shell">
-    <section class="phase" aria-labelledby="p2">
+    <section class="phase" aria-labelledby="p3">
       <div class="phase-head">
-        <span class="phase-num">Step 2</span>
-        <h2 id="p2">Pick a workflow</h2>
-        <span class="phase-note">What to ask to decide: Is your design final or close to final?</span>
+        <span class="phase-num">Step 3</span>
+        <h2 id="p3">Test and verify your code</h2>
+        <span class="phase-note">The same for every workflow</span>
       </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">06</span>
+          <span class="owner owner-ai">AI-assisted</span>
+        </div>
+        <div class="step-body">
+          <h3>Ask Claude Code to check your work against your token file</h3>
+          <p>Ask Claude Code to compare the code against your JSON design token file and list any colors, spacing, or type values that don't match a token.</p>
+          <p class="aside">Treat the answer as a first pass, not proof. Claude Code can miss values or describe checks it didn't fully run, so confirm its findings yourself in steps 07 to 09.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">07</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Read and verify the code</h3>
+          <p>Read the code that AI writes, and make sure it meets current standards for your platform.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">08</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Check accessibility manually and with a tool</h3>
+          <p>Automated tools miss things such as focus visibility, screen reader announcements, and reflow. These four manual checks are a starting point, not a full audit:</p>
+          <ul class="checklist">
+            <li>Tab through the design to verify the tab order is correct.</li>
+            <li>Test your design on a screen reader if possible.</li>
+            <li>Test your design in a mobile-sized browser.</li>
+            <li>Zoom into your design to 200% and check to see if anything breaks.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">09</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Check for security vulnerabilities</h3>
+          <p>Review the code for security issues before it goes to production. These guides can help:</p>
+          <ul class="checklist">
+            <li><a href="https://best.openssf.org/Security-Focused-Guide-for-AI-Code-Assistant-Instructions.html">OpenSSF: Security-Focused Guide for AI Code Assistant Instructions</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/index.html">OWASP Cheat Sheet Series</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail">
+          <span class="step-num">10</span>
+          <span class="owner owner-human">Human</span>
+        </div>
+        <div class="step-body">
+          <h3>Check the final design against your design file.</h3>
+          <p>Does it meet the need you were originally intending?</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ BONUS WORKFLOWS ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="more">
+      <div class="phase-head">
+        <span class="phase-num">Bonus</span>
+        <h2 id="more">More workflows</h2>
+        <span class="phase-note">Not covered in the talk</span>
+      </div>
+
+      <p class="more-intro">Two more ways to work. Use the checks in Step 3 for these too.</p>
 
       <div class="fork">
 
         <article class="path">
-          <span class="tag">Workflow 1</span>
-          <h3>Figma → Claude Code</h3>
-          <p class="path-when">Use this workflow when your design is final or close to final.</p>
+          <span class="tag">Workflow 3</span>
+          <h3>Claude Code → Figma</h3>
+          <p class="path-when">Use this workflow when you have a design you already built in Claude Code and you want new design options in a similar style.</p>
           <ol>
             <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
-            <li><strong>Point Claude Code to your Design Tokens JSON file</strong>.</li>
-            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
-            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+            <li><strong>Ask Claude Code to recreate your existing design in Figma.</strong></li>
+            <li><strong>Check that the Figma layers use your variables, not typed-in values.</strong></li>
+            <li><strong>Explore new design options in Figma (Step 2).</strong></li>
+            <li><strong>When your new design is final or close to final, continue with Workflow 2.</strong></li>
           </ol>
+          <p class="aside">Check Figma's documentation for which plans and seats can use the Figma MCP server.</p>
         </article>
 
         <article class="path">
-          <span class="tag">Workflow 2</span>
+          <span class="tag">Workflow 4</span>
           <h3>Figma → Claude Design → Claude Code</h3>
-          <p class="path-when">Use this workflow when you have a starting point but you want to iterate on your design quickly.</p>
+          <p class="path-when">Use this workflow when your design idea is already in Figma, or when you want a new design based on a previous one, and you want to see design options quickly.</p>
           <ol>
-            <li><strong>In Figma, export the design frame as a PNG, and the variable list as text. You can also ask Claude Design to save the standards from your JSON file, so new designs follow them (Claude Design calls these saved standards a &ldquo;design system&rdquo;).</strong></li>
+            <li><strong>In Figma, export the design frame as a PNG, and the variable list as text. You can also ask Claude Design to save the standards from your JSON file, so new designs follow them.</strong></li>
             <li><strong>Explore design options using Claude Design.</strong></li>
             <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
             <li><strong>Point Claude Code to your handoff file, your Figma file or a PNG of your Figma file, and your Design token JSON file</strong>.</li>
@@ -777,107 +949,11 @@ h2, h3 { font-weight: 600; }
     </section>
   </div>
 
-  <!-- ============ STEP 3 ============ -->
-  <div class="shell">
-    <section class="phase" aria-labelledby="p3">
-      <div class="phase-head">
-        <span class="phase-num">Step 3</span>
-        <h2 id="p3">Gates</h2>
-        <span class="phase-note">Identical for both workflows</span>
-      </div>
-
-      <div class="step">
-        <div class="step-rail">
-          <span class="step-num">06</span>
-          <span class="owner owner-ai">AI-assisted</span>
-        </div>
-        <div class="step-body">
-          <h3>Ask Claude Code to check your work</h3>
-          <p>Ask Claude Code to compare the code against your JSON design token file and list any colors, spacing, or type values that don't match a token.</p>
-          <p class="aside">Treat the answer as a first pass, not proof. Claude Code can miss values or describe checks it didn't fully run, so confirm its findings yourself in step 07.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-rail">
-          <span class="step-num">07</span>
-          <span class="owner owner-human">Human</span>
-        </div>
-        <div class="step-body">
-          <h3>Check your work yourself</h3>
-          <p>These four checks cover some of what automated tools miss, such as focus visibility, screen reader announcements, and reflow. They are a starting point, not a full audit:</p>
-          <ul class="checklist">
-            <li>Tab through the design to verify the tab order is correct.</li>
-            <li>Test your design on a screen reader if possible.</li>
-            <li>Test your design in a mobile-sized browser.</li>
-            <li>Zoom into your design to 200% and check to see if anything breaks.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-rail">
-          <span class="step-num">08</span>
-          <span class="owner owner-human">Human</span>
-        </div>
-        <div class="step-body">
-          <h3>Check the final design against your design file.</h3>
-          <p>Does it meet the need you were originally intending?</p>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- ============ MORE WORKFLOWS ============ -->
-  <div class="shell">
-    <section class="phase" aria-labelledby="more">
-      <div class="phase-head">
-        <span class="phase-num">More</span>
-        <h2 id="more">More workflows</h2>
-        <span class="phase-note">These start outside of Figma</span>
-      </div>
-
-      <p class="more-intro">These two workflows don't start with a final Figma design. Use the checks in Step 3 for these too.</p>
-
-      <div class="fork">
-
-        <article class="path">
-          <span class="tag">Workflow 3</span>
-          <h3>Claude Design → Claude Code</h3>
-          <p class="path-when">Use this workflow when you don't have Figma or a Figma Pro account, or when you want to explore ideas first and then edit.</p>
-          <ol>
-            <li><strong>Ask Claude Design to save the standards from your JSON file, so new designs follow them.</strong></li>
-            <li><strong>Explore design options using Claude Design.</strong></li>
-            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
-            <li><strong>Point Claude Code to your handoff file and your Design token JSON file</strong>.</li>
-            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
-            <li><strong>After creating your code, check for accuracy and security.</strong></li>
-          </ol>
-        </article>
-
-        <article class="path">
-          <span class="tag">Workflow 4</span>
-          <h3>Claude Code → Figma</h3>
-          <p class="path-when">Use this workflow when you have a design you already built in Claude Code and you want new design options in a similar style.</p>
-          <ol>
-            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
-            <li><strong>Ask Claude Code to recreate your existing design in Figma.</strong></li>
-            <li><strong>Check that the Figma layers use your variables, not typed-in values.</strong></li>
-            <li><strong>Explore new design options in Figma.</strong></li>
-            <li><strong>When your new design is final or close to final, continue with Workflow 1.</strong></li>
-          </ol>
-          <p class="aside">Check Figma's documentation for which plans and seats can use the Figma MCP server.</p>
-        </article>
-
-      </div>
-    </section>
-  </div>
-
 </main>
 
 <footer class="closing">
   <div class="shell">
-    <p class="disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Claude and Figma are named because they are the tools I demonstrate, not as an endorsement or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+    <p class="disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Claude and Figma are named because they are the tools I demonstrate, not as an endorsement or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. You can use any AI tool that can write code. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
 
     <p class="colophon">
       © 2026 Natascha Truong. All rights reserved.<br>

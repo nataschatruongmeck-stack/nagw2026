@@ -194,7 +194,8 @@ footer.colophon-wrap { border-top: 1px solid var(--nt-rule); }
       <li><a href="design-tokens.html" aria-current="page">Design Tokens</a></li>
       <li><a href="contrast-matrix.html">Contrast Matrix</a></li>
       <li><a href="token-foundry.html">Token Foundry</a></li>
-      <li><a href="figma-first-workflow-guide.html">Figma-first Workflow</a></li>
+      <li><a href="figma-first-workflow-guide.html">Workflow Guide</a></li>
+      <li><a href="index.html#resources">Resources</a></li>
     </ul>
   </nav>
 </div>
@@ -212,7 +213,7 @@ footer.colophon-wrap { border-top: 1px solid var(--nt-rule); }
 
     <section aria-labelledby="what">
       <h2 id="what">What is a design token?</h2>
-      <p>A design token is information associated with a human-readable name. At minimum, it is a name and value pair. For example:</p>
+      <p>A design token is information associated with a human-readable name. At minimum, it is a name and value pair. This is the official definition from the <a href="https://www.designtokens.org/">Design Tokens Community Group</a>. For example:</p>
       <pre class="example" tabindex="0" role="region" aria-label="Name and value examples, scrollable">color-text-primary: #000000;
 font-size-heading-level-1: 44px;</pre>
     </section>
@@ -230,17 +231,18 @@ font-size-heading-level-1: 44px;</pre>
 
     <section aria-labelledby="file">
       <h2 id="file">The design token file</h2>
-      <p>Design token files are JSON files. This example follows the format from the <a href="https://www.designtokens.org/">Design Tokens Community Group</a>. It defines one color token, pure red, written as red, green, and blue values from 0 to 1:</p>
+      <p>Design token files are JSON (JavaScript Object Notation) files. This example defines one color token, white, written as a hex code:</p>
       <pre class="example" tabindex="0" role="region" aria-label="JSON token file example, scrollable">{
-  "token name": {
-    "$type": "color",
-    "$value": {
-      "colorSpace": "srgb",
-      "components": [1, 0, 0]
+  "color": {
+    "raw": {
+      "white": {
+        "$type": "color",
+        "$value": "#FFFFFF"
+      }
     }
   }
 }</pre>
-      <p>Figma has announced support for importing and exporting variables in this format. Check Figma's documentation for what is available on your plan.</p>
+      <p>The latest version of the Design Tokens Community Group format (2025.10) writes color values as an object with a color space and components, instead of a hex code. Check which format your tools support. For example, Figma has announced support for importing and exporting variables in the Design Tokens Community Group format; check Figma's documentation for what is available on your plan.</p>
     </section>
 
     <section aria-labelledby="use">
@@ -260,7 +262,7 @@ font-size-heading-level-1: 44px;</pre>
       <h2 id="next">Next steps</h2>
       <ul class="next">
         <li><a href="token-foundry.html">Build a token file with Token Foundry</a></li>
-        <li><a href="figma-first-workflow-guide.html">Follow the Figma-first workflow</a></li>
+        <li><a href="figma-first-workflow-guide.html">Follow the workflow guide</a></li>
         <li><a href="index.html#resources">See more resources</a></li>
       </ul>
     </section>
@@ -270,7 +272,7 @@ font-size-heading-level-1: 44px;</pre>
 
 <footer class="colophon-wrap">
   <div class="shell">
-    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
+    <p class="site-disclaimer"><strong>Disclaimer.</strong> This is a personal project. The views here are my own and do not represent my employer. Where Claude or Figma are named, it is because they are the tools I demonstrate — not an endorsement, or a recommendation that you or your organization adopt them. Use AI tools at your own risk and follow your organization's policies. You can use any AI tool that can write code. AI-generated code must be reviewed, validated, and security-tested before it goes to production.</p>
     <div class="colophon">
       <span>© 2026 Natascha Truong. All rights reserved.</span>
       <a href="accessibility.html">Accessibility</a>
