@@ -172,8 +172,6 @@ code {
 .skeptic .checklist { margin-top: 0; }
 
 .more-intro { max-width: 42rem; font-size: 0.9375rem; margin-bottom: var(--s5); }
-.fork.fork-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 46rem) { .fork.fork-4 { grid-template-columns: 1fr; } }
 .path p { font-size: 0.9375rem; }
 
 /* ---------- prerequisite stop-block ---------- */
@@ -711,10 +709,10 @@ h2, h3 { font-weight: 600; }
       <div class="phase-head">
         <span class="phase-num">Step 1</span>
         <h2 id="p1">Pick a workflow</h2>
-        <span class="phase-note">Where does your design start?</span>
+        <span class="phase-note">The two workflows from the talk</span>
       </div>
 
-      <div class="fork fork-4">
+      <div class="fork">
 
         <article class="path">
           <span class="tag">Workflow 1</span>
@@ -738,34 +736,6 @@ h2, h3 { font-weight: 600; }
             <li><strong>Design in Figma (Step 2).</strong></li>
             <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
             <li><strong>Point Claude Code to your Design Tokens JSON file</strong>.</li>
-            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
-            <li><strong>After creating your code, check for accuracy and security.</strong></li>
-          </ol>
-        </article>
-
-        <article class="path">
-          <span class="tag">Workflow 3</span>
-          <h3>Claude Code → Figma</h3>
-          <p class="path-when">Use this workflow when you have a design you already built in Claude Code and you want new design options in a similar style.</p>
-          <ol>
-            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
-            <li><strong>Ask Claude Code to recreate your existing design in Figma.</strong></li>
-            <li><strong>Check that the Figma layers use your variables, not typed-in values.</strong></li>
-            <li><strong>Explore new design options in Figma (Step 2).</strong></li>
-            <li><strong>When your new design is final or close to final, continue with Workflow 2.</strong></li>
-          </ol>
-          <p class="aside">Check Figma's documentation for which plans and seats can use the Figma MCP server.</p>
-        </article>
-
-        <article class="path">
-          <span class="tag">Workflow 4</span>
-          <h3>Figma → Claude Design → Claude Code</h3>
-          <p class="path-when">Use this workflow when your design idea is already in Figma, or when you want a new design based on a previous one, and you want to see design options quickly.</p>
-          <ol>
-            <li><strong>In Figma, export the design frame as a PNG, and the variable list as text. You can also ask Claude Design to save the standards from your JSON file, so new designs follow them.</strong></li>
-            <li><strong>Explore design options using Claude Design.</strong></li>
-            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
-            <li><strong>Point Claude Code to your handoff file, your Figma file or a PNG of your Figma file, and your Design token JSON file</strong>.</li>
             <li><strong>Constrain the design to your Design Tokens</strong>.</li>
             <li><strong>After creating your code, check for accuracy and security.</strong></li>
           </ol>
@@ -863,7 +833,7 @@ h2, h3 { font-weight: 600; }
       <div class="phase-head">
         <span class="phase-num">Step 3</span>
         <h2 id="p3">Test and verify your code</h2>
-        <span class="phase-note">The same for all four workflows</span>
+        <span class="phase-note">The same for every workflow</span>
       </div>
 
       <div class="step">
@@ -930,6 +900,51 @@ h2, h3 { font-weight: 600; }
           <h3>Check the final design against your design file.</h3>
           <p>Does it meet the need you were originally intending?</p>
         </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ BONUS WORKFLOWS ============ -->
+  <div class="shell">
+    <section class="phase" aria-labelledby="more">
+      <div class="phase-head">
+        <span class="phase-num">Bonus</span>
+        <h2 id="more">More workflows</h2>
+        <span class="phase-note">Not covered in the talk</span>
+      </div>
+
+      <p class="more-intro">Two more ways to work. Use the checks in Step 3 for these too.</p>
+
+      <div class="fork">
+
+        <article class="path">
+          <span class="tag">Workflow 3</span>
+          <h3>Claude Code → Figma</h3>
+          <p class="path-when">Use this workflow when you have a design you already built in Claude Code and you want new design options in a similar style.</p>
+          <ol>
+            <li><strong>Ensure your Figma MCP server is connected to Claude Code</strong>.</li>
+            <li><strong>Ask Claude Code to recreate your existing design in Figma.</strong></li>
+            <li><strong>Check that the Figma layers use your variables, not typed-in values.</strong></li>
+            <li><strong>Explore new design options in Figma (Step 2).</strong></li>
+            <li><strong>When your new design is final or close to final, continue with Workflow 2.</strong></li>
+          </ol>
+          <p class="aside">Check Figma's documentation for which plans and seats can use the Figma MCP server.</p>
+        </article>
+
+        <article class="path">
+          <span class="tag">Workflow 4</span>
+          <h3>Figma → Claude Design → Claude Code</h3>
+          <p class="path-when">Use this workflow when your design idea is already in Figma, or when you want a new design based on a previous one, and you want to see design options quickly.</p>
+          <ol>
+            <li><strong>In Figma, export the design frame as a PNG, and the variable list as text. You can also ask Claude Design to save the standards from your JSON file, so new designs follow them.</strong></li>
+            <li><strong>Explore design options using Claude Design.</strong></li>
+            <li><strong>When you are happy with your design, tell Claude Design to create a Claude Code Handoff file.</strong></li>
+            <li><strong>Point Claude Code to your handoff file, your Figma file or a PNG of your Figma file, and your Design token JSON file</strong>.</li>
+            <li><strong>Constrain the design to your Design Tokens</strong>.</li>
+            <li><strong>After creating your code, check for accuracy and security.</strong></li>
+          </ol>
+        </article>
+
       </div>
     </section>
   </div>
