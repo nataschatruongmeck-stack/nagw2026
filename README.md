@@ -10,7 +10,7 @@ Companion site for *The Skeptic's Guide to AI-Assisted Web Design*, presented by
 | [`design-tokens.html`](design-tokens.html) | What a design token is, what a token file looks like, and how to use it |
 | [`contrast-matrix.html`](contrast-matrix.html) | WCAG 2.1 contrast matrix — every ordered pair in a palette, judged against AA and AAA |
 | [`token-foundry.html`](token-foundry.html) | Design token builder with the contrast check built into the editor, exports JSON |
-| [`figma-first-workflow-guide.html`](figma-first-workflow-guide.html) | The AI tools from the talk, Claude Code tips, four design-to-code workflows, and the human checks to run before you ship |
+| [`figma-first-workflow-guide.html`](figma-first-workflow-guide.html) | The AI tools from the talk, Claude Code tips, two main design-to-code workflows plus two bonus workflows, and the human checks to run before you ship |
 
 ## How it's built
 
